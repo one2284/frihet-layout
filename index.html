@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프리헷 물류센터 파렛트 평면 배치도</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        frihet: {
+                            ivory: '#F4E3C9',
+                            brown: '#4E3525',
+                            brick: '#90583F',
+                            amber: '#C57D35',
+                            olive: '#535538',
+                            sand: '#DDCDAE',
+                            bg: '#FAF8F4',
+                            surface: '#FFFFFF',
+                            darkText: '#332318'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome & Pretendard Font -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    
+    <style>
+        /* 조회 전용 / 관리자 모드 표시 제어 */
+        body:not(.is-admin) .admin-only { display: none !important; }
+        body.is-admin .viewer-only { display: none !important; }
+        body:not(.is-admin) #pallet-modal input,
+        body:not(.is-admin) #pallet-modal select,
+        body:not(.is-admin) #pallet-modal textarea { background-color: #FAF8F4; color: #4E3525; }
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #FAF8F4;
+            color: #4E3525;
+            margin: 0;
+        }
+
+        /* 2D 평면도 바닥 에폭시 그리드 및 도면 라인 */
+        .floorplan-canvas {
+            background-color: #FFFFFF;
+            background-image: 
+                radial-gradient(#DDCDAE 1.5px, transparent 1.5px),
+                linear-gradient(to right, rgba(221, 205, 174, 0.35) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(221, 205, 174, 0.35) 1px, transparent 1px);
+            background-size: 20px 20px, 40px 40px, 40px 40px;
+            border: 2px solid #4E3525;
+        }
+
+        /* 스케치 구분 벽 스타일 */
+        .sketch-wall-line {
+            background: repeating-linear-gradient(
+                45deg,
+                #4b5563,
+                #4b5563 10px,
+                #374151 10px,
+                #374151 20px
+            );
+            border: 2px solid #1f2937;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* 건축물 요소 */
+        .arch-wall { background-color: #374151; border: 2px solid #1f2937; }
+        .arch-door-sliding { background: linear-gradient(to right, #9ca3af, #e5e7eb, #9ca3af); border: 2px solid #6b7280; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        .arch-window { background-color: #bae6fd; border: 4px solid #4b5563; box-shadow: inset 0 0 8px rgba(255,255,255,0.5); }
+
+        /* 2D 평면 파렛트 네모 칸 (100% 동일 규격 적용) */
+        .pallet-square {
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            background-color: #FFFFFF;
+            border: 2px solid #4E3525;
+            box-shadow: 0 2px 4px rgba(78, 53, 37, 0.08);
+            height: 115px;
+            width: 100%;
+        }
+
+        .pallet-square:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(78, 53, 37, 0.18);
+            border-color: #C57D35;
+            z-index: 20;
+        }
+
+        /* 카테고리별 평면 타일 배경 및 포인트 테두리 */
+        .square-powder { background-color: #F4F7FF; border-color: #3B82F6; }
+        .square-dessert { background-color: #FFFDF5; border-color: #C57D35; }
+        .square-liquid { background-color: #FAF5FF; border-color: #90583F; }
+        .square-sub { background-color: #F8FAF8; border-color: #535538; }
+        .square-etc { background-color: #F1F5F9; border-color: #64748B; }
+        .square-empty { background-color: #FFFFFF; border: 2px dashed #DDCDAE; }
+
+        /* 검색 하이라이트 인디케이터 */
+        .search-highlight { animation: highlight-pulse 1.2s infinite alternate; }
+
+        @keyframes highlight-pulse {
+            0% { box-shadow: 0 0 0 0px rgba(197, 125, 53, 0.8), 0 0 10px rgba(197, 125, 53, 0.5); }
+            100% { box-shadow: 0 0 0 6px rgba(197, 125, 53, 0), 0 0 18px rgba(197, 125, 53, 0.9); }
+        }
+
+        .writing-vertical {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; padding: 0 !important; }
+            .floorplan-canvas { background: white !important; border: 2px solid #000 !important; box-shadow: none !important; }
+            .pallet-square { border: 1.5px solid #000 !important; background: #fff !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="login-overlay" class="fixed inset-0 bg-frihet-brown/60 backdrop-blur-sm z-[9999] flex-col justify-center items-center no-print p-4" style="display:none">
+        <div id="login-box" class="bg-white p-8 md:p-10 rounded-2xl shadow-2xl border border-frihet-sand text-center max-w-sm w-[90%] relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-frihet-amber to-frihet-brick"></div>
+            <div class="w-16 h-16 bg-frihet-ivory text-frihet-brown rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-sm border border-frihet-sand">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 class="text-2xl font-black text-frihet-brown mb-2 tracking-tight">관리자 로그인</h2>
+            <p class="text-xs text-gray-500 mb-8 leading-relaxed">재고 수정은 관리자만 할 수 있어요.<br>다른 부서는 로그인 없이 조회만 가능합니다.</p>
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-frihet-brown mb-1 ml-1">관리자 비밀번호</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="password" id="login-pw" required autocomplete="current-password" placeholder="비밀번호를 입력하세요" class="w-full text-sm pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-frihet-amber focus:bg-white transition-colors">
+                    </div>
+                </div>
+                <p id="login-error" class="text-xs text-red-500 font-bold hidden text-center pt-2"></p>
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button type="button" onclick="closeAdminLogin()" class="py-3.5 bg-frihet-bg text-gray-500 font-bold rounded-xl">취소</button>
+                    <button type="submit" class="py-3.5 bg-frihet-brown hover:bg-frihet-brick text-white font-bold rounded-xl shadow-md transition-all">로그인</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard-content" class="p-3 md:p-6 pb-16">
+        
+        <header class="max-w-7xl mx-auto bg-frihet-brown text-white rounded-2xl p-5 shadow-xl mb-6 no-print flex flex-col md:flex-row items-center justify-between gap-4 border border-frihet-sand">
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 bg-frihet-ivory text-frihet-brown rounded-xl flex items-center justify-center text-2xl font-bold shadow-md">
+                    <i class="fa-solid fa-warehouse"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-frihet-amber text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">생산물류팀</span>
+                        <span class="text-xs text-frihet-ivory font-medium">실측 기반 2D 평면 배치 및 품목 관리</span>
+                        <span class="viewer-only bg-white/15 text-frihet-ivory text-[11px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-eye mr-1"></i>조회 전용</span>
+                        <span class="admin-only bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-pen mr-1"></i>관리자 편집 중</span>
+                    </div>
+                    <h1 class="text-2xl font-black tracking-tight mt-0.5 text-frihet-ivory">프리헷 물류센터 파렛트 평면 배치도</h1>
+                    <p id="last-updated" class="text-[11px] text-frihet-sand mt-1">불러오는 중...</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 flex-wrap w-full md:w-auto justify-end">
+                <div class="bg-frihet-darkText/30 p-1 rounded-xl flex items-center gap-1 border border-frihet-sand/30">
+                    <button id="view-btn-map2" onclick="switchViewMode('map2')" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow">
+                        <i class="fa-solid fa-map mr-1"></i> 제 2공장
+                    </button>
+                    <button id="view-btn-map3" onclick="switchViewMode('map3')" class="px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white">
+                        <i class="fa-solid fa-building mr-1"></i> 제 3공장
+                    </button>
+                    <button id="view-btn-list" onclick="switchViewMode('list')" class="px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white border-l border-white/20 pl-4 ml-1">
+                        <i class="fa-solid fa-list-check mr-1"></i> 전체 작성표
+                    </button>
+                </div>
+                <div class="relative min-w-[200px]">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-frihet-sand text-xs"></i>
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="품목명, 상태, 슬롯 검색..." class="w-full bg-white/10 text-xs text-white placeholder-frihet-sand/70 pl-8 pr-3 py-2 rounded-lg border border-frihet-sand/40 focus:outline-none focus:bg-white/20 focus:border-frihet-ivory">
+                </div>
+                <button onclick="confirmReset()" class="admin-only px-3 py-2 text-xs font-bold text-frihet-brown bg-frihet-ivory hover:bg-white rounded-lg transition-all shadow flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-right"></i> 초기화
+                </button>
+                <button onclick="saveData(true)" class="admin-only px-3 py-2 text-xs font-bold text-white bg-frihet-amber hover:bg-amber-600 rounded-lg transition-all shadow flex items-center gap-1">
+                    <i class="fa-solid fa-floppy-disk"></i> 저장
+                </button>
+                <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold text-frihet-brown bg-frihet-sand hover:bg-amber-200 rounded-lg transition-all shadow flex items-center gap-1">
+                    <i class="fa-solid fa-print"></i> 인쇄
+                </button>
+                <button onclick="openAdminLogin()" class="viewer-only px-3.5 py-2 text-xs font-bold text-frihet-ivory bg-white/10 hover:bg-white/20 border border-frihet-sand/40 rounded-lg transition-all shadow flex items-center gap-1 ml-2">
+                    <i class="fa-solid fa-user-lock"></i> 관리자
+                </button>
+                <button onclick="handleLogout()" class="admin-only px-3.5 py-2 text-xs font-bold text-red-400 bg-white/10 hover:bg-red-500 hover:text-white border border-red-400/30 hover:border-red-500 rounded-lg transition-all shadow flex items-center gap-1 ml-2">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> 로그아웃
+                </button>
+            </div>
+        </header>
+
+        <section class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">전체 총 보관 용량</p>
+                    <p class="text-2xl font-black text-frihet-brown mt-0.5">39 <span class="text-xs font-normal text-gray-500">PL</span></p>
+                </div>
+                <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-frihet-ivory text-frihet-brown flex items-center justify-center text-lg font-bold border border-frihet-sand">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">현재 적재 중 파렛트</p>
+                    <p class="text-2xl font-black text-frihet-amber mt-0.5"><span id="stat-used">0</span> <span class="text-xs font-normal text-gray-400">/ 39 PL</span></p>
+                </div>
+                <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-amber-50 text-frihet-amber flex items-center justify-center text-lg font-bold border border-amber-200">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">공파렛트 (잔여 슬롯)</p>
+                    <p class="text-2xl font-black text-frihet-olive mt-0.5"><span id="stat-empty">0</span> <span class="text-xs font-normal text-gray-400">PL</span></p>
+                </div>
+                <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-emerald-50 text-frihet-olive flex items-center justify-center text-lg font-bold border border-emerald-200">
+                    <i class="fa-solid fa-border-none"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">통합 보관 가동률</p>
+                    <p class="text-2xl font-black text-frihet-brown mt-0.5" id="stat-rate">0%</p>
+                </div>
+                <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-frihet-ivory text-frihet-brown flex items-center justify-center text-lg font-bold border border-frihet-sand">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+            </div>
+        </section>
+
+        <main id="view-container-map2" class="max-w-7xl mx-auto bg-white rounded-2xl p-6 border border-frihet-sand shadow-xl relative">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-frihet-sand pb-4 mb-6 gap-3">
+                <div>
+                    <h2 class="text-xl font-extrabold text-frihet-brown flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-frihet-amber"></i> 제 2공장 평면 배치도 (총 26 PL)
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">* 2공장 : <span class="text-frihet-brick font-bold">안전재고 보관 공간</span> (네모 칸 클릭 시 적재 정보 수정 가능)</p>
+                </div>
+            </div>
+
+            <div class="floorplan-canvas p-6 rounded-2xl relative overflow-x-auto min-w-[1100px]">
+                <div class="w-full flex items-end justify-start mb-6 arch-wall h-12 rounded-t-lg relative shadow-inner px-8">
+                    <div class="absolute left-[20%] bottom-3 w-16 h-6 arch-window flex items-center justify-center">
+                        <span class="text-[8px] font-black text-slate-600">유리창</span>
+                    </div>
+                    <div class="w-64 h-14 arch-door-sliding translate-y-2 rounded-t-md flex items-center justify-center gap-4 absolute left-[71.5%] -translate-x-1/2 z-10 border-b-0">
+                        <div class="h-full w-[2px] bg-gray-500 absolute left-1/2 -translate-x-1/2"></div>
+                        <span class="text-[10px] font-black text-gray-700 z-10 bg-white/90 px-2 py-0.5 rounded shadow-sm">
+                            <i class="fa-solid fa-arrows-left-right"></i> 안쪽 슬라이딩 도어
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-3 relative bg-frihet-bg/50 p-4 rounded-xl border border-frihet-sand">
+                    <div class="col-start-5 row-start-1 row-span-7 border-x-2 border-dashed border-frihet-amber/60 flex flex-col items-center justify-center bg-frihet-ivory/30 rounded-xl text-center relative overflow-hidden h-full">
+                        <div class="writing-vertical text-frihet-brown text-sm font-black tracking-widest flex items-center gap-3 my-auto">
+                            <i class="fa-solid fa-truck-forklift text-frihet-amber text-xl transform -rotate-90"></i>
+                            <span>중앙 지게차 이동 통로</span>
+                            <i class="fa-solid fa-arrow-down text-frihet-amber text-sm mt-2"></i>
+                        </div>
+                    </div>
+
+                    <!-- A 구역 -->
+                    <div id="slot-A-1" class="col-start-1 row-start-1"></div>
+                    <div class="col-start-2 row-start-1 bg-gray-800 text-white rounded-xl border-2 border-gray-600 p-2 flex flex-col items-center justify-center shadow-sm text-center h-[115px]">
+                        <i class="fa-solid fa-plug-circle-bolt text-green-400 text-3xl mb-1.5"></i>
+                        <span class="text-[11px] font-black tracking-tight">지게차 충전기</span>
+                    </div>
+                    <div id="slot-A-3" class="col-start-3 row-start-1"></div>
+                    
+                    <div class="col-start-4 row-start-1 h-[115px]"></div>
+                    <div class="col-start-3 row-start-2 h-[115px]"></div>
+                    <div class="col-start-4 row-start-2 h-[115px]"></div>
+                    <div class="col-start-4 row-start-3 h-[115px]"></div>
+                    
+                    <div id="slot-A-4" class="col-start-1 row-start-2"></div>
+                    <div class="col-start-2 row-start-2 bg-amber-100/90 text-amber-900 rounded-xl border-2 border-amber-400 p-2 flex flex-col items-center justify-center shadow-sm text-center h-[115px]">
+                        <i class="fa-solid fa-truck-forklift text-amber-600 text-3xl mb-1.5"></i>
+                        <span class="text-[11px] font-black tracking-tight">지게차 보관 장소</span>
+                    </div>
+                    
+                    <div id="slot-A-5" class="col-start-1 row-start-3"></div>
+                    <div id="slot-A-6" class="col-start-2 row-start-3"></div>
+                    <div class="col-start-3 row-start-3 bg-white border-2 border-blue-200 rounded-xl flex flex-col items-center justify-center shadow-md h-[115px]">
+                        <i class="fa-solid fa-wind text-blue-400 text-3xl mb-1"></i>
+                        <span class="text-[11px] font-black text-gray-600">스탠드 에어컨</span>
+                    </div>
+
+                    <div class="col-start-3 col-span-2 row-start-1 row-span-3 relative pointer-events-none z-10" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        <div class="absolute right-0 top-0 w-[calc(50%-6px)] h-full bg-[#FEFCE8] border-2 border-dashed border-[#FBBF24] rounded-xl"></div>
+                        <div class="absolute left-0 top-[127px] w-[calc(50%-6px)] h-[115px] bg-[#FEFCE8] border-2 border-dashed border-[#FBBF24] rounded-xl"></div>
+                        <div class="absolute right-[calc(50%-8px)] top-[129px] w-[16px] h-[111px] bg-[#FEFCE8]"></div>
+                        <div class="z-20 text-center mt-6">
+                            <span class="text-[15px] font-black text-[#78350F] bg-[#FEFCE8] px-3">지게차 이동 통로</span><br>
+                            <span class="text-[12px] font-bold text-red-500 bg-[#FEFCE8] px-2">(적재 금지)</span>
+                        </div>
+                    </div>
+
+                    <div class="col-start-1 col-span-4 row-start-4 sketch-wall-line h-[115px] rounded-xl relative flex items-center justify-center shadow-md px-8 overflow-hidden z-20">
+                        <span class="bg-gray-800/90 px-8 py-2.5 rounded-lg text-[14px] font-black text-gray-100 tracking-widest shadow-sm flex items-center border border-gray-600">
+                            <i class="fa-solid fa-arrows-left-right mr-2 text-frihet-sand"></i> 중간 기둥
+                        </span>
+                    </div>
+
+                    <!-- B 구역 -->
+                    <div id="slot-B-1" class="col-start-1 row-start-5"></div>
+                    <div id="slot-B-2" class="col-start-2 row-start-5"></div>
+                    <div id="slot-B-3" class="col-start-3 row-start-5"></div>
+                    <div id="slot-B-4" class="col-start-4 row-start-5"></div>
+                    <div id="slot-B-5" class="col-start-1 row-start-6"></div>
+                    <div id="slot-B-6" class="col-start-2 row-start-6"></div>
+                    <div id="slot-B-7" class="col-start-3 row-start-6"></div>
+                    <div id="slot-B-8" class="col-start-4 row-start-6"></div>
+                    <div id="slot-B-9" class="col-start-1 row-start-7"></div>
+                    <div id="slot-B-10" class="col-start-2 row-start-7"></div>
+                    <div id="slot-B-11" class="col-start-3 row-start-7"></div>
+                    <div id="slot-B-12" class="col-start-4 row-start-7"></div>
+
+                    <!-- C 구역 -->
+                    <div id="slot-C-1" class="col-start-7 row-start-1"></div>
+                    <div id="slot-C-2" class="col-start-7 row-start-2"></div>
+                    <div id="slot-C-3" class="col-start-7 row-start-3"></div>
+                    <div id="slot-C-4" class="col-start-6 row-start-4"></div>
+                    <div id="slot-C-5" class="col-start-7 row-start-4"></div>
+                    <div id="slot-C-6" class="col-start-6 row-start-5"></div>
+                    <div id="slot-C-7" class="col-start-7 row-start-5"></div>
+                    <div id="slot-C-8" class="col-start-6 row-start-6"></div>
+                    <div id="slot-C-9" class="col-start-7 row-start-6"></div>
+
+                    <!-- 삭제된 C-10 자리 및 그 옆을 이동 통로로 지정 -->
+                    <div class="col-start-6 col-span-2 row-start-7 bg-[#FEFCE8] border-2 border-dashed border-[#FBBF24] rounded-xl flex flex-col items-center justify-center shadow-sm z-10 pointer-events-none">
+                        <span class="text-[13px] font-black text-[#78350F] mb-1">지게차 이동 통로</span>
+                        <span class="text-[11px] font-bold text-red-500">(적재 금지)</span>
+                    </div>
+
+                    <div class="col-start-6 row-start-1 row-span-3 bg-[#FEFCE8] border-2 border-dashed border-[#FBBF24] rounded-xl flex flex-col items-center justify-center shadow-sm z-10 pointer-events-none">
+                        <span class="text-[13px] font-black text-[#78350F] mb-1">지게차 이동 통로</span>
+                        <span class="text-[11px] font-bold text-red-500">(적재 금지)</span>
+                    </div>
+                </div>
+
+                <div class="w-full mt-8 pt-4 border-t-4 border-gray-400 flex items-start justify-between relative">
+                    <span class="absolute -top-3 left-4 bg-white px-2 text-xs font-bold text-gray-500">2창고 하단 라인</span>
+                    <div class="flex-1 flex justify-center ml-24">
+                        <div class="bg-gray-400 w-80 h-14 border-4 border-gray-500 border-b-0 flex items-center justify-center relative shadow-inner">
+                            <div class="absolute -left-12 bottom-0 w-12 h-14 bg-gray-300 border-4 border-r-0 border-gray-500 skew-y-12 origin-bottom-right shadow-lg"></div>
+                            <div class="absolute -right-12 bottom-0 w-12 h-14 bg-gray-300 border-4 border-l-0 border-gray-500 -skew-y-12 origin-bottom-left shadow-lg"></div>
+                            <span class="text-[13px] font-black text-white tracking-widest">메인 양문형 철문 (지게차 이동)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main id="view-container-map3" class="max-w-7xl mx-auto bg-white rounded-2xl p-6 border border-frihet-sand shadow-xl relative hidden">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-frihet-sand pb-4 mb-6 gap-3">
+                <div>
+                    <h2 class="text-xl font-extrabold text-frihet-brown flex items-center gap-2">
+                        <i class="fa-solid fa-building text-frihet-amber"></i> 제 3공장 평면 배치도 (총 13 PL)
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">* 3공장 : 실제 출고를 위한 <span class="text-blue-600 font-bold">피킹 및 패킹 작업 공간</span> <span class="text-red-500 font-bold">(최대 1단 적재만 가능)</span></p>
+                </div>
+            </div>
+
+            <div class="floorplan-canvas p-6 rounded-2xl relative overflow-x-auto min-w-[1100px]">
+                <div class="grid grid-cols-7 gap-3 relative bg-frihet-bg/50 p-4 rounded-xl border border-frihet-sand overflow-hidden">
+                    
+                    <!-- [구조 1] 3공장 우측 상단 사선 건물 외부 벽면 (정밀 조준) -->
+                    <div class="absolute top-0 right-0 w-[32%] h-[520px] z-0 rounded-tr-xl overflow-hidden pointer-events-none">
+                        <!-- 배경 채우기 (Clip Path 적용) -->
+                        <div class="absolute inset-0 bg-[#e5e7eb]" style="clip-path: polygon(100% 0, 100% 100%, 41% 0);">
+                            <div style="position: absolute; width: 100%; height: 100%; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);"></div>
+                            <span class="absolute top-[35%] right-[12%] text-gray-400 font-black text-xl tracking-widest z-10 opacity-60">건물 외부 벽면</span>
+                        </div>
+                        <!-- 단일 사선 테두리 라인 (SVG 활용으로 완벽한 반응형 궤적 보장) -->
+                        <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                            <line x1="41%" y1="0" x2="100%" y2="100%" stroke="#9ca3af" stroke-width="5" />
+                        </svg>
+                    </div>
+
+                    <!-- [구조 2] 좌측 하단 컷아웃 벽면 -->
+                    <div class="col-start-1 col-span-4 row-start-5 row-span-3 bg-[#e5e7eb] border-t-4 border-r-4 border-gray-400 shadow-inner z-0 rounded-tr-xl flex items-center justify-center relative overflow-hidden">
+                        <div style="position: absolute; width: 100%; height: 100%; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);"></div>
+                        <span class="text-gray-400 font-black text-xl tracking-widest z-10 opacity-60">건물 외부 벽면</span>
+                    </div>
+
+                    <!-- === 파렛트 D-1 ~ D-3 (좌측 세로) === -->
+                    <div id="slot-D-1" class="col-start-1 row-start-1 z-10 h-[115px]"></div>
+                    <div id="slot-D-2" class="col-start-1 row-start-2 z-10 h-[115px]"></div>
+                    <div id="slot-D-3" class="col-start-1 row-start-3 z-10 h-[115px]"></div>
+
+                    <!-- === 파렛트 D-4 ~ D-7 (하단 가로) === -->
+                    <div id="slot-D-4" class="col-start-1 row-start-4 z-10 h-[115px]"></div>
+                    <div id="slot-D-5" class="col-start-2 row-start-4 z-10 h-[115px]"></div>
+                    <div id="slot-D-6" class="col-start-3 row-start-4 z-10 h-[115px]"></div>
+                    <div id="slot-D-7" class="col-start-4 row-start-4 z-10 h-[115px]"></div>
+
+                    <!-- === 중앙 작업대 (2~4열, 1~3행) === -->
+                    <div class="col-start-2 col-span-3 row-start-1 row-span-3 bg-[#E2E8F0] border-2 border-[#94A3B8] rounded-xl flex flex-col items-center justify-center shadow-md z-10 relative overflow-hidden" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.4) 10px, rgba(255,255,255,0.4) 20px);">
+                        <div class="w-[85%] h-[90px] bg-gradient-to-b from-[#e2e8f0] to-[#cbd5e1] border-2 border-[#94a3b8] rounded shadow-sm mb-4 flex items-center justify-center relative">
+                            <div class="absolute -bottom-3 left-8 w-3 h-3 bg-[#64748b]"></div>
+                            <div class="absolute -bottom-3 right-8 w-3 h-3 bg-[#64748b]"></div>
+                            <div class="flex items-center gap-8">
+                                <i class="fa-solid fa-box text-[#94a3b8] text-3xl drop-shadow-sm"></i>
+                                <i class="fa-solid fa-print text-[#64748b] text-2xl drop-shadow-sm"></i>
+                                <i class="fa-solid fa-tape text-[#94a3b8] text-2xl drop-shadow-sm"></i>
+                                <i class="fa-solid fa-barcode text-[#64748b] text-2xl drop-shadow-sm"></i>
+                            </div>
+                        </div>
+                        <span class="font-black text-gray-700 tracking-[0.2em] text-[18px] bg-white/90 px-10 py-2.5 rounded-lg border border-gray-300 shadow-sm z-10">
+                            작 업 대
+                        </span>
+                    </div>
+
+                    <!-- === 중앙 이동 통로 === -->
+                    <div class="col-start-5 row-start-1 row-span-7 flex flex-col items-center justify-center z-10 border-x-2 border-dashed border-frihet-amber/60 bg-frihet-ivory/30 rounded-xl relative overflow-hidden">
+                        <div class="writing-vertical text-frihet-brown text-sm font-black tracking-widest flex items-center gap-4 my-auto">
+                            <i class="fa-solid fa-truck-forklift text-frihet-amber text-xl transform -rotate-90"></i>
+                            <span>중앙 이동 통로</span>
+                            <i class="fa-solid fa-arrow-down text-frihet-amber text-sm mt-3"></i>
+                        </div>
+                    </div>
+
+                    <!-- === 파렛트 D-8 ~ D-13 (우측 순차 배열 탑다운, 요청 물리적 위치 고정) === -->
+                    <div id="slot-D-8" class="col-start-6 row-start-2 z-10 h-[115px]"></div>
+                    <div id="slot-D-9" class="col-start-6 row-start-3 z-10 h-[115px]"></div>
+                    <div id="slot-D-10" class="col-start-6 row-start-4 z-10 h-[115px]"></div>
+                    <div id="slot-D-11" class="col-start-7 row-start-4 z-10 h-[115px]"></div>
+                    <div id="slot-D-12" class="col-start-6 row-start-5 z-10 h-[115px]"></div>
+                    <div id="slot-D-13" class="col-start-7 row-start-5 z-10 h-[115px]"></div>
+
+                    <!-- === 입구 === -->
+                    <div class="col-start-5 row-start-7 border-b-8 border-green-600 flex items-end justify-center pb-2 z-20 translate-y-3 bg-white/90 rounded-t-lg shadow-sm">
+                        <span class="text-green-700 font-black text-[14px] px-3 whitespace-nowrap">
+                            <i class="fa-solid fa-door-open mr-1"></i> 입 구
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+        <main id="view-container-list" class="max-w-7xl mx-auto bg-white rounded-2xl p-6 border border-frihet-sand shadow-xl relative hidden">
+            <div class="flex items-center justify-between border-b border-frihet-sand pb-4 mb-4">
+                <div>
+                    <h2 class="text-xl font-extrabold text-frihet-brown flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-frihet-amber"></i> 전체 파렛트 품목 일괄 작성표 (총 39 PL)
+                    </h2>
+                </div>
+                <button onclick="saveData(true)" class="admin-only px-4 py-2 text-xs font-bold text-white bg-frihet-amber hover:bg-amber-600 rounded-lg transition-all shadow">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> 전체 작성 내용 저장
+                </button>
+            </div>
+            <div class="overflow-x-auto border border-frihet-sand rounded-xl">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-frihet-ivory text-frihet-brown font-bold border-b border-frihet-sand">
+                            <th class="p-3 text-center w-16">슬롯 ID</th>
+                            <th class="p-3 w-32">구역</th>
+                            <th class="p-3 w-40">카테고리</th>
+                            <th class="p-3">적재 품목명</th>
+                            <th class="p-3 w-28">단수</th>
+                            <th class="p-3 w-28">수량</th>
+                            <th class="p-3 w-32">날짜</th>
+                            <th class="p-3 w-44">비고</th>
+                            <th class="p-3 text-center w-20">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batch-table-body" class="divide-y divide-frihet-sand/40"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="pallet-modal" class="fixed inset-0 bg-frihet-brown/60 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-frihet-sand text-frihet-darkText relative">
+            <div class="flex items-center justify-between border-b border-frihet-sand pb-3 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <span id="modal-slot-id" class="text-xs font-black bg-frihet-amber text-white px-2.5 py-1 rounded-md">A-1</span>
+                    <h3 id="modal-title" class="text-base font-bold text-frihet-brown">파렛트 정보 수정</h3>
+                </div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-frihet-brown text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold text-frihet-brown block">이 파렛트를 고정석으로 설정</span>
+                    <span class="text-[10px] text-gray-500">체크 시 자물쇠 아이콘이 표시됩니다.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="modal-is-fixed" class="sr-only peer">
+                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500"></div>
+                </label>
+            </div>
+
+            <form id="pallet-form" onsubmit="savePalletDetail(event)" class="space-y-4">
+                <input type="hidden" id="modal-slot-key">
+                <div>
+                    <label id="modal-stack-label" class="block text-xs font-bold text-frihet-brown mb-1.5">박스 적재 단수 (최대 2단)</label>
+                    <div id="stack-btn-group" class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="setStackHeight('0')" id="stack-btn-0" class="py-2 text-xs font-bold rounded-lg border border-frihet-sand bg-frihet-bg">공파렛트</button>
+                        <button type="button" onclick="setStackHeight('1')" id="stack-btn-1" class="py-2 text-xs font-bold rounded-lg border border-frihet-sand bg-frihet-bg">1단</button>
+                        <button type="button" onclick="setStackHeight('2')" id="stack-btn-2" class="py-2 text-xs font-bold rounded-lg border border-frihet-sand bg-frihet-bg">2단</button>
+                    </div>
+                    <input type="hidden" id="modal-stack-height" value="1">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-frihet-brown mb-1">카테고리</label>
+                    <select id="modal-status" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none">
+                        <option value="empty">공파렛트 (Empty)</option>
+                        <option value="powder">파우더류</option>
+                        <option value="dessert">디저트류</option>
+                        <option value="liquid">액상/시럽</option>
+                        <option value="sub">부자재</option>
+                        <option value="etc">기타</option>
+                    </select>
+                </div>
+                <div><label class="block text-xs font-bold text-frihet-brown mb-1">품목명</label><input type="text" id="modal-item-name" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-bold text-frihet-brown mb-1">수량</label><input type="text" id="modal-qty" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    <div><label class="block text-xs font-bold text-frihet-brown mb-1">입고일</label><input type="text" id="modal-date" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-frihet-brown mb-1">비고</label><textarea id="modal-note" rows="2" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></textarea></div>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-frihet-sand">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-xs font-bold text-gray-500 bg-frihet-bg rounded-lg"><span class="admin-only">취소</span><span class="viewer-only">닫기</span></button>
+                    <button type="submit" class="admin-only px-4 py-2 text-xs font-bold text-white bg-frihet-brown rounded-lg">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="toast" class="fixed bottom-6 right-6 bg-frihet-brown text-frihet-ivory px-4 py-3 rounded-xl font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 flex items-center gap-2 z-50">
+        <i class="fa-solid fa-circle-check text-frihet-amber"></i><span id="toast-msg">저장되었습니다.</span>
+    </div>
+
+    <script>
+        const factory2Slots = {
+            'A-1': { name: 'A-1', zone: '2공장 A구역', status: 'sub', stack: 2, item: '디저트 포장지', qty: '', date: '', note: '고정', isFixed: true },
+            'A-3': { name: 'A-3', zone: '2공장 A구역', status: 'powder', stack: 2, item: '바닐라 파우더', qty: '36 Box', date: '08.25', note: '', isFixed: false },
+            'A-4': { name: 'A-4', zone: '2공장 A구역', status: 'sub', stack: 2, item: '부자재 여러 품목 (긴급)', qty: '', date: '', note: '고정', isFixed: true },
+            'A-5': { name: 'A-5', zone: '2공장 A구역', status: 'empty', stack: 0, item: '미적재', qty: '', date: '', note: '고정', isFixed: true },
+            'A-6': { name: 'A-6', zone: '2공장 A구역', status: 'liquid', stack: 2, item: '카라멜 시럽', qty: '40 Box', date: '08.20', note: '', isFixed: false },
+            'B-1': { name: 'B-1', zone: '2공장 B구역', status: 'powder', stack: 2, item: '초코 파우더', qty: '48 Box', date: '08.30', note: '', isFixed: false },
+            'B-2': { name: 'B-2', zone: '2공장 B구역', status: 'powder', stack: 2, item: '녹차 파우더', qty: '48 Box', date: '08.30', note: '', isFixed: false },
+            'B-3': { name: 'B-3', zone: '2공장 B구역', status: 'powder', stack: 2, item: '밀크티 파우더', qty: '36 Box', date: '09.01', note: '신규입고', isFixed: false },
+            'B-4': { name: 'B-4', zone: '2공장 B구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'B-5': { name: 'B-5', zone: '2공장 B구역', status: 'sub', stack: 2, item: 'PET 16온스 컵', qty: '30 Box', date: '08.15', note: '', isFixed: false },
+            'B-6': { name: 'B-6', zone: '2공장 B구역', status: 'sub', stack: 2, item: '종이컵 리드', qty: '25 Box', date: '08.18', note: '', isFixed: false },
+            'B-7': { name: 'B-7', zone: '2공장 B구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'B-8': { name: 'B-8', zone: '2공장 B구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'B-9': { name: 'B-9', zone: '2공장 B구역', status: 'sub', stack: 2, item: '1구 비닐 캐리어', qty: '50 Box', date: '08.20', note: '', isFixed: false },
+            'B-10': { name: 'B-10', zone: '2공장 B구역', status: 'sub', stack: 2, item: '컵홀더 SC마닐라', qty: '40 Box', date: '08.21', note: '', isFixed: false },
+            'B-11': { name: 'B-11', zone: '2공장 B구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'B-12': { name: 'B-12', zone: '2공장 B구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'C-1': { name: 'C-1', zone: '2공장 C구역', status: 'dessert', stack: 2, item: '황치즈 쿠키', qty: '60 Box', date: '09.01', note: '', isFixed: false },
+            'C-2': { name: 'C-2', zone: '2공장 C구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'C-3': { name: 'C-3', zone: '2공장 C구역', status: 'dessert', stack: 2, item: '이당푸드 꿀건빵', qty: '70 Box', date: '08.28', note: '', isFixed: false },
+            'C-4': { name: 'C-4', zone: '2공장 C구역', status: 'dessert', stack: 2, item: '초코 프레첼', qty: '35 Box', date: '08.20', note: '', isFixed: false },
+            'C-5': { name: 'C-5', zone: '2공장 C구역', status: 'dessert', stack: 2, item: '카라멜 팝콘', qty: '50 Box', date: '08.31', note: '', isFixed: false },
+            'C-6': { name: 'C-6', zone: '2공장 C구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'C-7': { name: 'C-7', zone: '2공장 C구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'C-8': { name: 'C-8', zone: '2공장 C구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'C-9': { name: 'C-9', zone: '2공장 C구역', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false }
+        };
+
+        const factory3Slots = {
+            'D-1': { name: 'D-1', zone: '3공장 좌측', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-2': { name: 'D-2', zone: '3공장 좌측', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-3': { name: 'D-3', zone: '3공장 좌측', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-4': { name: 'D-4', zone: '3공장 중앙가로', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-5': { name: 'D-5', zone: '3공장 중앙가로', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-6': { name: 'D-6', zone: '3공장 중앙가로', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-7': { name: 'D-7', zone: '3공장 중앙가로', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-8': { name: 'D-8', zone: '3공장 우측탑다운', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-9': { name: 'D-9', zone: '3공장 우측탑다운', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-10': { name: 'D-10', zone: '3공장 우측탑다운', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-11': { name: 'D-11', zone: '3공장 우측탑다운', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-12': { name: 'D-12', zone: '3공장 우측탑다운', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false },
+            'D-13': { name: 'D-13', zone: '3공장 우측탑다운', status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false }
+        };
+
+        const defaultSlots = { ...factory2Slots, ...factory3Slots };
+        let slots = {};
+
+        // ===== 서버 연동 설정 =====
+        // 페이지가 /layout 처럼 하위 경로에 붙어도 API 주소가 맞게 잡히도록 기준 경로 계산
+        let basePath = location.pathname;
+        if (!basePath.endsWith('/') && !basePath.endsWith('.html')) basePath += '/';
+        basePath = basePath.replace(/[^/]*$/, '');
+        const API_LAYOUT = basePath + 'api/layout';
+        const API_LOGIN = basePath + 'api/login';
+        const POLL_MS = 30000;      // 조회 화면 자동 새로고침 주기 (30초)
+
+        let isAdmin = false;
+        let adminPw = '';
+        let serverVersion = -1;
+        let dirty = false;           // 작성표에서 고친 뒤 아직 저장 안 한 상태
+
+        window.handleLogin = handleLogin;
+        window.handleLogout = handleLogout;
+        window.openAdminLogin = openAdminLogin;
+        window.closeAdminLogin = closeAdminLogin;
+        window.switchViewMode = switchViewMode;
+        window.confirmReset = confirmReset;
+        window.saveData = saveData;
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+        window.savePalletDetail = savePalletDetail;
+        window.setStackHeight = setStackHeight;
+        window.updateBatchField = updateBatchField;
+        window.handleSearch = handleSearch;
+
+        function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+        function applySlots(parsed) {
+            const next = {};
+            Object.keys(defaultSlots).forEach(key => {
+                next[key] = (parsed && parsed[key]) ? parsed[key] : clone(defaultSlots[key]);
+                if (key.startsWith('D-') && next[key].stack > 1) next[key].stack = 1;
+                else if (!key.startsWith('D-') && next[key].stack > 2) next[key].stack = 2;
+            });
+            slots = next;
+        }
+
+        function renderEverything() {
+            renderAllSlots();
+            if (!document.getElementById('view-container-list').classList.contains('hidden')) renderBatchTable();
+            updateSummary();
+            handleSearch();
+        }
+
+        function setUpdated(ts) {
+            const el = document.getElementById('last-updated');
+            if (!ts) { el.innerText = '아직 저장된 배치가 없어 기본 배치를 표시 중'; return; }
+            const d = new Date(ts * 1000);
+            const pad = n => String(n).padStart(2, '0');
+            el.innerText = `마지막 업데이트 ${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        async function loadFromServer(silent) {
+            try {
+                const r = await fetch(API_LAYOUT, { cache: 'no-store' });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const data = await r.json();
+                if (data.version === serverVersion) return;   // 바뀐 게 없으면 다시 그리지 않음
+                serverVersion = data.version;
+                applySlots(data.slots);
+                setUpdated(data.updatedAt);
+                renderEverything();
+            } catch (e) {
+                console.error('load error', e);
+                if (serverVersion === -1) {
+                    applySlots(null);
+                    renderEverything();
+                    document.getElementById('last-updated').innerText = '서버에 연결하지 못해 기본 배치를 표시 중';
+                }
+                if (!silent) showToast('⚠️ 서버에 연결할 수 없습니다.');
+            }
+        }
+
+        function initApp() {
+            try { adminPw = sessionStorage.getItem('frihet_admin_pw') || ''; } catch (e) { adminPw = ''; }
+            if (adminPw) setAdmin(true);
+            loadFromServer(true);
+            setInterval(() => {
+                const modalOpen = !document.getElementById('pallet-modal').classList.contains('hidden');
+                if (dirty || (isAdmin && modalOpen)) return;   // 편집 중엔 덮어쓰지 않음
+                loadFromServer(true);
+            }, POLL_MS);
+            window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        function setAdmin(on) {
+            isAdmin = on;
+            document.body.classList.toggle('is-admin', on);
+            if (!document.getElementById('view-container-list').classList.contains('hidden')) renderBatchTable();
+        }
+
+        function openAdminLogin() {
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('login-pw').value = '';
+            document.getElementById('login-overlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('login-pw').focus(), 50);
+        }
+
+        function closeAdminLogin() { document.getElementById('login-overlay').style.display = 'none'; }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const pw = document.getElementById('login-pw').value;
+            const errorMsg = document.getElementById('login-error');
+            try {
+                const r = await fetch(API_LOGIN, { method: 'POST', headers: { 'X-Admin-Password': pw } });
+                if (r.status === 401) {
+                    errorMsg.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i>비밀번호가 일치하지 않습니다.';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+            } catch (err) {
+                errorMsg.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i>서버에 연결할 수 없습니다.';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            adminPw = pw;
+            try { sessionStorage.setItem('frihet_admin_pw', pw); } catch (err) {}
+            closeAdminLogin();
+            setAdmin(true);
+            showToast('관리자 모드로 전환되었습니다.');
+        }
+
+        function handleLogout() {
+            if (dirty && !window.confirm('저장하지 않은 변경 사항이 있습니다. 그래도 로그아웃할까요?')) return;
+            adminPw = '';
+            try { sessionStorage.removeItem('frihet_admin_pw'); } catch (e) {}
+            dirty = false;
+            setAdmin(false);
+            serverVersion = -2;           // 서버 기준으로 다시 불러오기
+            loadFromServer(true);
+            showToast('조회 전용 모드로 전환되었습니다.');
+        }
+
+        async function saveData(s = true) {
+            if (!isAdmin) return;
+            try {
+                const r = await fetch(API_LAYOUT, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPw },
+                    body: JSON.stringify({ slots: slots })
+                });
+                if (r.status === 401) {
+                    showToast('관리자 인증이 만료되었습니다. 다시 로그인해 주세요.');
+                    adminPw = '';
+                    try { sessionStorage.removeItem('frihet_admin_pw'); } catch (e) {}
+                    setAdmin(false);
+                    openAdminLogin();
+                    return;
+                }
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const data = await r.json();
+                serverVersion = data.version;
+                setUpdated(data.updatedAt);
+                dirty = false;
+                if (s) showToast('저장 완료 (전 부서 화면에 반영됩니다)');
+            } catch (error) {
+                console.error('Save error', error);
+                showToast('⚠️ 저장 실패! 서버 연결을 확인해 주세요.');
+            }
+        }
+
+        function renderAllSlots() {
+            Object.keys(defaultSlots).forEach(key => {
+                const container = document.getElementById(`slot-${key}`);
+                if (!container) return;
+                
+                const item = slots[key] || { name: key, status: 'empty', stack: 0, item: '', isFixed: false };
+                container.innerHTML = '';
+
+                let statusBadge = '<span class="text-[9px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded font-bold">공슬롯</span>';
+                let styleClass = 'square-empty';
+                
+                if (item.status === 'powder') { statusBadge = '<span class="text-[9px] bg-blue-600 text-white font-black px-1.5 py-0.5 rounded">파우더</span>'; styleClass = 'square-powder'; } 
+                else if (item.status === 'dessert') { statusBadge = '<span class="text-[9px] bg-frihet-amber text-white font-black px-1.5 py-0.5 rounded">디저트</span>'; styleClass = 'square-dessert'; } 
+                else if (item.status === 'liquid') { statusBadge = '<span class="text-[9px] bg-frihet-brick text-white font-black px-1.5 py-0.5 rounded">액상/시럽</span>'; styleClass = 'square-liquid'; } 
+                else if (item.status === 'sub') { statusBadge = '<span class="text-[9px] bg-frihet-olive text-white font-black px-1.5 py-0.5 rounded">부자재</span>'; styleClass = 'square-sub'; }
+                else if (item.status === 'etc') { statusBadge = '<span class="text-[9px] bg-slate-500 text-white font-black px-1.5 py-0.5 rounded">기타</span>'; styleClass = 'square-etc'; }
+
+                const hasItem = item.status !== 'empty' && item.item;
+                const fixedBadge = item.isFixed ? `<div class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md z-30" title="고정석"><i class="fa-solid fa-lock text-[10px]"></i></div>` : '';
+
+                const tile = document.createElement('div');
+                tile.className = `pallet-square ${styleClass} p-2.5 rounded-xl cursor-pointer flex flex-col justify-between w-full relative`;
+                tile.id = `card-${key}`;
+                tile.onclick = () => openModal(key);
+                tile.innerHTML = `
+                    ${fixedBadge}
+                    <div class="flex items-center justify-between border-b border-frihet-sand/50 pb-1">
+                        <span class="text-[11px] font-black text-white bg-frihet-brown px-2 py-0.5 rounded">${key}</span>${statusBadge}
+                    </div>
+                    <div class="my-2"><p class="text-[12px] font-black ${hasItem ? 'text-frihet-brown' : 'text-gray-400 font-normal'} truncate leading-tight">${hasItem ? item.item : '미적재 (공파렛트)'}</p></div>
+                    <div class="flex items-center justify-between text-[10px] text-gray-500 pt-1 border-t border-frihet-sand/30 mt-auto">
+                        <span class="font-bold text-frihet-brick">${hasItem && item.qty ? item.qty : '-'}</span>
+                        <span class="bg-frihet-ivory text-frihet-brown font-black px-1.5 py-0.2 rounded border border-frihet-sand">${hasItem && item.stack ? item.stack + '단' : '0단'}</span>
+                    </div>`;
+                container.appendChild(tile);
+            });
+        }
+
+        function renderBatchTable() {
+            const tbody = document.getElementById('batch-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const DIS = isAdmin ? '' : 'disabled';
+            Object.keys(defaultSlots).forEach(key => {
+                const item = slots[key] || { status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false };
+                const fixedIcon = item.isFixed ? '<i class="fa-solid fa-lock text-red-500 text-[10px] ml-1" title="고정석"></i>' : '';
+                const stackOptions = key.startsWith('D-') 
+                    ? `<option value="0" ${item.stack == 0 ? 'selected' : ''}>0단</option><option value="1" ${item.stack == 1 ? 'selected' : ''}>1단</option>` 
+                    : `<option value="0" ${item.stack == 0 ? 'selected' : ''}>0단</option><option value="1" ${item.stack == 1 ? 'selected' : ''}>1단</option><option value="2" ${item.stack == 2 ? 'selected' : ''}>2단</option>`;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2.5 text-center font-bold text-frihet-brown">${key} ${fixedIcon}</td>
+                    <td class="p-2.5 text-gray-500">${item.zone || '물류센터'}</td>
+                    <td class="p-2"><select onchange="updateBatchField('${key}', 'status', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"><option value="empty" ${item.status === 'empty' ? 'selected' : ''}>공파렛트</option><option value="powder" ${item.status === 'powder' ? 'selected' : ''}>파우더류</option><option value="dessert" ${item.status === 'dessert' ? 'selected' : ''}>디저트류</option><option value="liquid" ${item.status === 'liquid' ? 'selected' : ''}>액상/시럽</option><option value="sub" ${item.status === 'sub' ? 'selected' : ''}>부자재</option><option value="etc" ${item.status === 'etc' ? 'selected' : ''}>기타</option></select></td>
+                    <td class="p-2"><input type="text" value="${item.item || ''}" onchange="updateBatchField('${key}', 'item', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2"><select onchange="updateBatchField('${key}', 'stack', parseInt(this.value))" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded">${stackOptions}</select></td>
+                    <td class="p-2"><input type="text" value="${item.qty || ''}" onchange="updateBatchField('${key}', 'qty', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2"><input type="text" value="${item.date || ''}" onchange="updateBatchField('${key}', 'date', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2"><input type="text" value="${item.note || ''}" onchange="updateBatchField('${key}', 'note', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2 text-center"><button onclick="openModal('${key}')" class="px-2 py-1 bg-frihet-brown text-white text-[10px] rounded hover:bg-frihet-brick font-bold">${isAdmin ? '상세' : '보기'}</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateBatchField(k, f, v) { 
+            if (!isAdmin) return;
+            dirty = true;
+            slots[k][f] = v; 
+            if (f === 'status' && v === 'empty') { slots[k].stack = 0; slots[k].item = ''; slots[k].qty = ''; } 
+            renderAllSlots(); updateSummary(); 
+        }
+
+        function switchViewMode(m) {
+            document.getElementById('view-container-map2').classList.toggle('hidden', m !== 'map2');
+            document.getElementById('view-container-map3').classList.toggle('hidden', m !== 'map3');
+            document.getElementById('view-container-list').classList.toggle('hidden', m !== 'list');
+            
+            document.getElementById('view-btn-map2').className = m === 'map2' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white';
+            document.getElementById('view-btn-map3').className = m === 'map3' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white';
+            document.getElementById('view-btn-list').className = m === 'list' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow border-l border-white/20 pl-4 ml-1' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white border-l border-white/20 pl-4 ml-1';
+            
+            if (m === 'list') renderBatchTable();
+        }
+
+        function updateSummary() {
+            let usedCount = Object.keys(defaultSlots).filter(k => slots[k] && slots[k].status !== 'empty').length;
+            document.getElementById('stat-used').innerText = usedCount;
+            document.getElementById('stat-empty').innerText = 39 - usedCount;
+            document.getElementById('stat-rate').innerText = `${Math.round((usedCount / 39) * 100)}%`;
+        }
+
+        function setStackHeight(h) {
+            document.getElementById('modal-stack-height').value = h;
+            [0, 1, 2].forEach(i => {
+                const btn = document.getElementById(`stack-btn-${i}`);
+                if(btn) btn.className = i.toString() === h ? 'py-2 text-xs font-bold rounded-lg border border-frihet-brown bg-frihet-brown text-white shadow-md' : 'py-2 text-xs font-bold rounded-lg border border-frihet-sand bg-frihet-bg text-gray-500 hover:bg-frihet-ivory';
+            });
+            if (h === '0') document.getElementById('modal-status').value = 'empty'; 
+            else if (document.getElementById('modal-status').value === 'empty') document.getElementById('modal-status').value = 'powder';
+        }
+
+        function openModal(k) {
+            const item = slots[k] || { status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false };
+            document.getElementById('modal-slot-key').value = k; document.getElementById('modal-slot-id').innerText = k;
+            document.getElementById('modal-status').value = item.status || 'empty'; document.getElementById('modal-item-name').value = item.item || '';
+            document.getElementById('modal-qty').value = item.qty || ''; document.getElementById('modal-date').value = item.date || ''; document.getElementById('modal-note').value = item.note || '';
+            document.getElementById('modal-is-fixed').checked = item.isFixed === true;
+            
+            const is3F = k.startsWith('D-');
+            document.getElementById('modal-stack-label').innerText = is3F ? '박스 적재 단수 (최대 1단)' : '박스 적재 단수 (최대 2단)';
+            document.getElementById('stack-btn-group').className = is3F ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-3 gap-2';
+            document.getElementById('stack-btn-2').style.display = is3F ? 'none' : 'block';
+            
+            let currentStack = (item.stack !== undefined) ? item.stack : (item.status !== 'empty' ? 1 : 0);
+            if (is3F && currentStack > 1) currentStack = 1;
+            setStackHeight(currentStack.toString());
+            
+            const form = document.getElementById('pallet-modal');
+            form.querySelectorAll('input:not([type=hidden]), select, textarea, #stack-btn-group button').forEach(el => { el.disabled = !isAdmin; });
+            document.getElementById('modal-title').innerText = isAdmin ? '파렛트 정보 수정' : '파렛트 정보';
+            document.getElementById('pallet-modal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('pallet-modal').classList.add('hidden'); }
+
+        function savePalletDetail(e) {
+            e.preventDefault(); if (!isAdmin) { closeModal(); return; } const k = document.getElementById('modal-slot-key').value;
+            const st = document.getElementById('modal-status').value;
+            slots[k] = { 
+                name: k, 
+                zone: defaultSlots[k]?.zone, 
+                status: st, 
+                stack: st === 'empty' ? 0 : parseInt(document.getElementById('modal-stack-height').value || 0), 
+                item: st === 'empty' ? '' : document.getElementById('modal-item-name').value, 
+                qty: st === 'empty' ? '' : document.getElementById('modal-qty').value, 
+                date: st === 'empty' ? '' : document.getElementById('modal-date').value, 
+                note: st === 'empty' ? '' : document.getElementById('modal-note').value,
+                isFixed: document.getElementById('modal-is-fixed').checked
+            };
+            closeModal(); renderAllSlots(); renderBatchTable(); updateSummary(); saveData(false).then(() => showToast(`[${k}] 저장되어 전 부서에 반영되었습니다.`));
+        }
+
+        function confirmReset() { 
+            if (!isAdmin) return;
+            if (window.confirm('초기 상태로 복원하시겠습니까? (고정석 정보도 초기화되며 즉시 전 부서에 반영됩니다)')) { 
+                slots = JSON.parse(JSON.stringify(defaultSlots)); 
+                saveData(false); 
+                renderAllSlots(); 
+                renderBatchTable(); 
+                updateSummary(); 
+                showToast('초기화 완료'); 
+            } 
+        }
+
+        function handleSearch() {
+            const q = document.getElementById('search-input').value.trim().toLowerCase();
+            Object.keys(defaultSlots).forEach(k => {
+                const card = document.getElementById(`card-${k}`); if (!card) return; card.classList.remove('search-highlight');
+                if (q.length > 0) { const i = slots[k] || {}; if ((i.item && i.item.toLowerCase().includes(q)) || k.toLowerCase().includes(q) || (i.note && i.note.toLowerCase().includes(q))) card.classList.add('search-highlight'); }
+            });
+        }
+        
+        function showToast(m, isPersistent = false) { 
+            const t = document.getElementById('toast'); 
+            document.getElementById('toast-msg').innerText = m; 
+            t.classList.remove('translate-y-12', 'opacity-0'); 
+            
+            // 기존에 걸려있던 타이머가 있다면 초기화
+            if (window.toastTimer) clearTimeout(window.toastTimer);
+            
+            if (!isPersistent) {
+                window.toastTimer = setTimeout(() => t.classList.add('translate-y-12', 'opacity-0'), 2500); 
+            }
+        }
+    </script>
+</body>
+</html>
