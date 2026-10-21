@@ -129,32 +129,36 @@
 </head>
 <body class="min-h-screen">
 
-    <div id="login-overlay" class="fixed inset-0 bg-frihet-brown/60 backdrop-blur-sm z-[9999] flex-col justify-center items-center no-print p-4" style="display:none">
-        <div id="login-box" class="bg-white p-8 md:p-10 rounded-2xl shadow-2xl border border-frihet-sand text-center max-w-sm w-[90%] relative overflow-hidden">
+    <div id="login-overlay" class="fixed inset-0 bg-frihet-bg z-[9999] flex-col justify-center items-center no-print p-4" style="display:flex">
+        <div class="bg-white p-8 md:p-10 rounded-2xl shadow-2xl border border-frihet-sand text-center max-w-sm w-[92%] relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-frihet-amber to-frihet-brick"></div>
-            <div class="w-16 h-16 bg-frihet-ivory text-frihet-brown rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-sm border border-frihet-sand">
-                <i class="fa-solid fa-lock"></i>
+            <div class="w-16 h-16 bg-frihet-ivory text-frihet-brown rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-5 shadow-sm border border-frihet-sand">
+                <i class="fa-solid fa-warehouse"></i>
             </div>
-            <h2 class="text-2xl font-black text-frihet-brown mb-2 tracking-tight">관리자 로그인</h2>
-            <p class="text-xs text-gray-500 mb-8 leading-relaxed">재고 수정은 관리자만 할 수 있어요.<br>다른 부서는 로그인 없이 조회만 가능합니다.</p>
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4 text-left">
+            <h2 class="text-xl font-black text-frihet-brown mb-1 tracking-tight">프리헷 물류센터 배치도</h2>
+            <p id="login-sub" class="text-xs text-gray-500 mb-7 leading-relaxed">아이디와 비밀번호를 입력해 주세요.</p>
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-3 text-left">
                 <div>
-                    <label class="block text-xs font-bold text-frihet-brown mb-1 ml-1">관리자 비밀번호</label>
+                    <label class="block text-xs font-bold text-frihet-brown mb-1 ml-1">아이디</label>
                     <div class="relative">
-                        <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input type="password" id="login-pw" required autocomplete="current-password" placeholder="비밀번호를 입력하세요" class="w-full text-sm pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-frihet-amber focus:bg-white transition-colors">
+                        <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="login-id" required autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="아이디" class="w-full text-sm pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-frihet-amber focus:bg-white transition-colors">
                     </div>
                 </div>
-                <p id="login-error" class="text-xs text-red-500 font-bold hidden text-center pt-2"></p>
-                <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button type="button" onclick="closeAdminLogin()" class="py-3.5 bg-frihet-bg text-gray-500 font-bold rounded-xl">취소</button>
-                    <button type="submit" class="py-3.5 bg-frihet-brown hover:bg-frihet-brick text-white font-bold rounded-xl shadow-md transition-all">로그인</button>
+                <div>
+                    <label class="block text-xs font-bold text-frihet-brown mb-1 ml-1">비밀번호</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="password" id="login-pw" required autocomplete="current-password" placeholder="비밀번호" class="w-full text-sm pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-frihet-amber focus:bg-white transition-colors">
+                    </div>
                 </div>
+                <p id="login-error" class="text-xs text-red-500 font-bold hidden text-center pt-1"></p>
+                <button type="submit" id="login-btn" class="w-full mt-2 py-3.5 bg-frihet-brown hover:bg-frihet-brick text-white font-bold rounded-xl shadow-md transition-all">로그인</button>
             </form>
         </div>
     </div>
 
-    <div id="dashboard-content" class="p-3 md:p-6 pb-16">
+    <div id="dashboard-content" class="p-3 md:p-6 pb-16" style="display:none">
         
         <header class="max-w-7xl mx-auto bg-frihet-brown text-white rounded-2xl p-5 shadow-xl mb-6 no-print flex flex-col md:flex-row items-center justify-between gap-4 border border-frihet-sand">
             <div class="flex items-center gap-3.5">
@@ -165,8 +169,8 @@
                     <div class="flex items-center gap-2">
                         <span class="bg-frihet-amber text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">생산물류팀</span>
                         <span class="text-xs text-frihet-ivory font-medium">실측 기반 2D 평면 배치 및 품목 관리</span>
-                        <span class="viewer-only bg-white/15 text-frihet-ivory text-[11px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-eye mr-1"></i>조회 전용</span>
-                        <span class="admin-only bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-pen mr-1"></i>관리자 편집 중</span>
+                        
+                        
                     </div>
                     <h1 class="text-2xl font-black tracking-tight mt-0.5 text-frihet-ivory">프리헷 물류센터 파렛트 평면 배치도</h1>
                     <p id="last-updated" class="text-[11px] text-frihet-sand mt-1">불러오는 중...</p>
@@ -198,8 +202,8 @@
                 <button onclick="window.print()" class="px-3.5 py-2 text-xs font-bold text-frihet-brown bg-frihet-sand hover:bg-amber-200 rounded-lg transition-all shadow flex items-center gap-1">
                     <i class="fa-solid fa-print"></i> 인쇄
                 </button>
-                <button onclick="openAdminLogin()" class="viewer-only px-3.5 py-2 text-xs font-bold text-frihet-ivory bg-white/10 hover:bg-white/20 border border-frihet-sand/40 rounded-lg transition-all shadow flex items-center gap-1 ml-2">
-                    <i class="fa-solid fa-user-lock"></i> 관리자
+                <button onclick="downloadBackup()" title="지금 재고를 layout.json 파일로 내려받기 (재배포 전 백업용)" class="admin-only px-3 py-2 text-xs font-bold text-frihet-ivory bg-white/10 hover:bg-white/20 border border-frihet-sand/40 rounded-lg transition-all shadow flex items-center gap-1 ml-2">
+                    <i class="fa-solid fa-file-arrow-down"></i> 백업
                 </button>
                 <button onclick="handleLogout()" class="admin-only px-3.5 py-2 text-xs font-bold text-red-400 bg-white/10 hover:bg-red-500 hover:text-white border border-red-400/30 hover:border-red-500 rounded-lg transition-all shadow flex items-center gap-1 ml-2">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> 로그아웃
@@ -610,23 +614,25 @@
         let slots = {};
 
         // ===== 서버 연동 설정 =====
-        // 페이지가 /layout 처럼 하위 경로에 붙어도 API 주소가 맞게 잡히도록 기준 경로 계산
+        // 페이지가 하위 경로에 붙어도 API 주소가 맞게 잡히도록 기준 경로 계산
         let basePath = location.pathname;
         if (!basePath.endsWith('/') && !basePath.endsWith('.html')) basePath += '/';
         basePath = basePath.replace(/[^/]*$/, '');
         const API_LAYOUT = basePath + 'api/layout';
         const API_LOGIN = basePath + 'api/login';
-        const POLL_MS = 30000;      // 조회 화면 자동 새로고침 주기 (30초)
+        const POLL_MS = 30000;               // 다른 사람이 고친 내용 자동 반영 주기 (30초)
+        const TOKEN_KEY = 'frihet_session_v1';
 
-        let isAdmin = false;
-        let adminPw = '';
+        let isAdmin = false;                 // 로그인 상태 = 수정 가능
+        let token = '';
         let serverVersion = -1;
-        let dirty = false;           // 작성표에서 고친 뒤 아직 저장 안 한 상태
+        let lastUpdatedAt = null;
+        let dirty = false;                   // 작성표에서 고친 뒤 아직 저장 안 한 상태
+        const changedKeys = new Set();       // 저장 대기 중인 칸
 
         window.handleLogin = handleLogin;
         window.handleLogout = handleLogout;
-        window.openAdminLogin = openAdminLogin;
-        window.closeAdminLogin = closeAdminLogin;
+        window.downloadBackup = downloadBackup;
         window.switchViewMode = switchViewMode;
         window.confirmReset = confirmReset;
         window.saveData = saveData;
@@ -638,6 +644,7 @@
         window.handleSearch = handleSearch;
 
         function clone(o) { return JSON.parse(JSON.stringify(o)); }
+        function markChanged(...keys) { keys.forEach(k => changedKeys.add(k)); }
 
         function applySlots(parsed) {
             const next = {};
@@ -657,6 +664,7 @@
         }
 
         function setUpdated(ts) {
+            lastUpdatedAt = ts;
             const el = document.getElementById('last-updated');
             if (!ts) { el.innerText = '아직 저장된 배치가 없어 기본 배치를 표시 중'; return; }
             const d = new Date(ts * 1000);
@@ -671,14 +679,37 @@
         function startPreviewMode() {
             previewMode = true;
             applySlots(null);
+            enterApp();
             renderEverything();
             document.getElementById('last-updated').innerText = '🧪 미리보기 모드 · 서버 없이 테스트 중 (이 화면에서만 바뀌고 새로고침하면 처음으로 돌아가요)';
+            showToast('🧪 미리보기 모드라 아이디·비밀번호 확인 없이 들어왔어요 (실제 사이트에선 필요)');
+        }
+
+        function readToken() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return token; } }
+        function writeToken(t) { token = t; try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+
+        function enterApp() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = '';
+            setAdmin(true);
+        }
+
+        function showLogin(message) {
+            setAdmin(false);
+            document.getElementById('dashboard-content').style.display = 'none';
+            document.getElementById('login-overlay').style.display = 'flex';
+            const err = document.getElementById('login-error');
+            if (message) { err.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i>${message}`; err.classList.remove('hidden'); }
+            else err.classList.add('hidden');
+            document.getElementById('login-pw').value = '';
+            setTimeout(() => (document.getElementById('login-id').value ? document.getElementById('login-pw') : document.getElementById('login-id')).focus(), 50);
         }
 
         async function loadFromServer(silent) {
-            if (previewMode) return;
+            if (previewMode || !token) return;
             try {
-                const r = await fetch(API_LAYOUT, { cache: 'no-store' });
+                const r = await fetch(API_LAYOUT, { cache: 'no-store', headers: { 'X-Session-Token': token } });
+                if (r.status === 401) { writeToken(''); serverVersion = -1; showLogin('로그인이 만료됐어요. 다시 로그인해 주세요.'); return; }
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 const data = await r.json();
                 if (data.version === serverVersion) return;   // 바뀐 게 없으면 다시 그리지 않음
@@ -687,7 +718,6 @@
                 setUpdated(data.updatedAt);
                 renderEverything();
             } catch (e) {
-                if (CAN_PREVIEW && serverVersion === -1) { console.warn('서버 없음 → 미리보기 모드', e); startPreviewMode(); return; }
                 console.error('load error', e);
                 if (serverVersion === -1) {
                     applySlots(null);
@@ -699,12 +729,12 @@
         }
 
         function initApp() {
-            try { adminPw = sessionStorage.getItem('frihet_admin_pw') || ''; } catch (e) { adminPw = ''; }
-            if (adminPw) setAdmin(true);
-            loadFromServer(true);
+            token = readToken();
+            if (token) { enterApp(); loadFromServer(true); }
+            else showLogin();
             setInterval(() => {
                 const modalOpen = !document.getElementById('pallet-modal').classList.contains('hidden');
-                if (dirty || dragKey || (isAdmin && modalOpen)) return;   // 편집 중엔 덮어쓰지 않음
+                if (!isAdmin || dirty || dragKey || modalOpen || changedKeys.size) return;   // 편집 중엔 덮어쓰지 않음
                 loadFromServer(true);
             }, POLL_MS);
             window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -724,85 +754,78 @@
             if (!document.getElementById('view-container-list').classList.contains('hidden')) renderBatchTable();
         }
 
-        function openAdminLogin() {
-            document.getElementById('login-error').classList.add('hidden');
-            document.getElementById('login-pw').value = '';
-            document.getElementById('login-overlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('login-pw').focus(), 50);
-        }
-
-        function closeAdminLogin() { document.getElementById('login-overlay').style.display = 'none'; }
-
         async function handleLogin(e) {
             e.preventDefault();
+            const id = document.getElementById('login-id').value.trim();
             const pw = document.getElementById('login-pw').value;
-            const errorMsg = document.getElementById('login-error');
-            if (previewMode) {
-                closeAdminLogin();
-                setAdmin(true);
-                showToast('🧪 미리보기 모드라 비밀번호 확인 없이 들어왔어요 (실제 사이트에선 비밀번호 필요)');
-                return;
-            }
+            const err = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true; btn.innerText = '확인 중...';
             try {
-                const r = await fetch(API_LOGIN, { method: 'POST', headers: { 'X-Admin-Password': pw } });
-                if (r.status === 401) {
-                    errorMsg.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i>비밀번호가 일치하지 않습니다.';
-                    errorMsg.classList.remove('hidden');
-                    return;
-                }
+                const r = await fetch(API_LOGIN, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id, password: pw }) });
+                if (r.status === 401) { showLogin('아이디 또는 비밀번호가 일치하지 않습니다.'); return; }
                 if (!r.ok) throw new Error('HTTP ' + r.status);
-            } catch (err) {
-                errorMsg.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i>서버에 연결할 수 없습니다.';
-                errorMsg.classList.remove('hidden');
-                return;
+                const data = await r.json();
+                writeToken(data.token);
+                serverVersion = -1;
+                enterApp();
+                await loadFromServer(false);
+                showToast('로그인되었습니다 · 파렛트를 끌어다 놓으면 위치를 옮길 수 있어요');
+            } catch (ex) {
+                if (CAN_PREVIEW) { startPreviewMode(); return; }
+                err.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i>서버에 연결할 수 없습니다.';
+                err.classList.remove('hidden');
+            } finally {
+                btn.disabled = false; btn.innerText = '로그인';
             }
-            adminPw = pw;
-            try { sessionStorage.setItem('frihet_admin_pw', pw); } catch (err) {}
-            closeAdminLogin();
-            setAdmin(true);
-            showToast('관리자 모드 · 파렛트를 끌어다 놓으면 위치를 옮길 수 있어요');
         }
 
         function handleLogout() {
-            if (dirty && !window.confirm('저장하지 않은 변경 사항이 있습니다. 그래도 로그아웃할까요?')) return;
-            adminPw = '';
-            try { sessionStorage.removeItem('frihet_admin_pw'); } catch (e) {}
+            if ((dirty || changedKeys.size) && !window.confirm('저장하지 않은 변경 사항이 있습니다. 그래도 로그아웃할까요?')) return;
             dirty = false;
-            setAdmin(false);
-            if (!previewMode) {
-                serverVersion = -2;           // 서버 기준으로 다시 불러오기
-                loadFromServer(true);
-            }
-            showToast('조회 전용 모드로 전환되었습니다.');
+            changedKeys.clear();
+            writeToken('');
+            serverVersion = -1;
+            previewMode = false;
+            showLogin();
         }
 
-        async function saveData(s = true) {
+        function downloadBackup() {
+            const blob = new Blob([JSON.stringify({ version: serverVersion, updatedAt: lastUpdatedAt, slots: slots }, null, 1)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'layout.json';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+            showToast('지금 재고를 layout.json 으로 내려받았어요');
+        }
+
+        async function saveData(s = true, full = false) {
             if (!isAdmin) return;
+            if (!full && !changedKeys.size) { dirty = false; if (s) showToast('저장할 변경 사항이 없어요.'); return; }
             if (previewMode) {
-                dirty = false;
+                dirty = false; changedKeys.clear();
                 document.getElementById('last-updated').innerText = `🧪 미리보기 모드 · ${new Date().toLocaleTimeString('ko-KR')} 테스트 저장 (실제 사이트에는 반영 안 됨)`;
                 if (s) showToast('🧪 미리보기라 이 화면에서만 저장됐어요');
                 return;
             }
+            const sending = full ? null : Array.from(changedKeys);
+            const body = full ? { slots: slots } : { changes: Object.fromEntries(sending.map(k => [k, slots[k]])) };
             try {
                 const r = await fetch(API_LAYOUT, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPw },
-                    body: JSON.stringify({ slots: slots })
+                    headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
+                    body: JSON.stringify(body)
                 });
-                if (r.status === 401) {
-                    showToast('관리자 인증이 만료되었습니다. 다시 로그인해 주세요.');
-                    adminPw = '';
-                    try { sessionStorage.removeItem('frihet_admin_pw'); } catch (e) {}
-                    setAdmin(false);
-                    openAdminLogin();
-                    return;
-                }
+                if (r.status === 401) { writeToken(''); showLogin('로그인이 만료돼 저장하지 못했어요. 다시 로그인한 뒤 수정해 주세요.'); return; }
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 const data = await r.json();
+                if (full) changedKeys.clear(); else sending.forEach(k => changedKeys.delete(k));
+                dirty = changedKeys.size > 0;
                 serverVersion = data.version;
+                applySlots(data.slots);            // 다른 사람이 그사이 고친 칸도 함께 반영
                 setUpdated(data.updatedAt);
-                dirty = false;
+                renderEverything();
                 if (s) showToast('저장 완료 (전 부서 화면에 반영됩니다)');
             } catch (error) {
                 console.error('Save error', error);
@@ -879,7 +902,7 @@
 
         function updateBatchField(k, f, v) { 
             if (!isAdmin) return;
-            dirty = true;
+            dirty = true; markChanged(k);
             slots[k][f] = v; 
             if (f === 'status' && v === 'empty') { slots[k].stack = 0; slots[k].item = ''; slots[k].qty = ''; } 
             renderAllSlots(); updateSummary(); 
@@ -962,6 +985,7 @@
                 ? `${to}에는 이미 [${labelOf(b)}]이(가) 있어요.\n${from} ↔ ${to} 두 파렛트의 자리를 서로 바꿀까요?`
                 : `[${labelOf(a)}] 파렛트를 ${from} → ${to}(으)로 옮길까요?`;
             if (!window.confirm(msg + (notes.length ? '\n\n※ ' + notes.join('\n※ ') : ''))) return false;
+            markChanged(from, to);
             Object.assign(slots[to], ca);
             Object.assign(slots[from], cb);
             renderEverything();
@@ -1039,14 +1063,15 @@
                 note: st === 'empty' ? '' : document.getElementById('modal-note').value,
                 isFixed: document.getElementById('modal-is-fixed').checked
             };
-            closeModal(); renderAllSlots(); renderBatchTable(); updateSummary(); saveData(false).then(() => showToast(previewMode ? `🧪 [${k}] 테스트 저장 (미리보기)` : `[${k}] 저장되어 전 부서에 반영되었습니다.`));
+            markChanged(k); closeModal(); renderAllSlots(); renderBatchTable(); updateSummary(); saveData(false).then(() => showToast(previewMode ? `🧪 [${k}] 테스트 저장 (미리보기)` : `[${k}] 저장되어 전 부서에 반영되었습니다.`));
         }
 
         function confirmReset() { 
             if (!isAdmin) return;
-            if (window.confirm('초기 상태로 복원하시겠습니까? (고정석 정보도 초기화되며 즉시 전 부서에 반영됩니다)')) { 
+            if (window.confirm('정말 모든 재고를 처음 기본 배치로 되돌릴까요?\n지금까지 입력한 재고가 모두 사라지고 즉시 전 부서에 반영됩니다.') &&
+                window.confirm('한 번 더 확인할게요. 초기화를 진행할까요?')) { 
                 slots = JSON.parse(JSON.stringify(defaultSlots)); 
-                saveData(false); 
+                saveData(false, true); 
                 renderAllSlots(); 
                 renderBatchTable(); 
                 updateSummary(); 
