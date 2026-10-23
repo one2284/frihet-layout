@@ -104,6 +104,10 @@
 
         /* 검색 하이라이트 인디케이터 */
         .search-highlight { animation: highlight-pulse 1.2s infinite alternate; }
+        /* 제목 한 줄 유지 */
+        .title-one-line { white-space: nowrap; font-size: clamp(1.05rem, 4.2vw, 1.5rem); line-height: 1.25; }
+        /* 입고 예정 표시 */
+        .incoming-tag { background: repeating-linear-gradient(135deg, #FFF7E6, #FFF7E6 6px, #FDEBC8 6px, #FDEBC8 12px); }
         /* 관리자 파렛트 이동 */
         body.is-admin .pallet-square[draggable="true"] { cursor: grab; }
         .pallet-square.is-dragging { opacity: 0.4; }
@@ -160,24 +164,24 @@
 
     <div id="dashboard-content" class="p-3 md:p-6 pb-16" style="display:none">
         
-        <header class="max-w-7xl mx-auto bg-frihet-brown text-white rounded-2xl p-5 shadow-xl mb-6 no-print flex flex-col md:flex-row items-center justify-between gap-4 border border-frihet-sand">
-            <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 bg-frihet-ivory text-frihet-brown rounded-xl flex items-center justify-center text-2xl font-bold shadow-md">
+        <header class="max-w-7xl mx-auto bg-frihet-brown text-white rounded-2xl p-5 shadow-xl mb-6 no-print flex flex-col xl:flex-row items-center justify-between gap-4 border border-frihet-sand">
+            <div class="flex items-center gap-3.5 min-w-0 max-w-full">
+                <div class="shrink-0 w-12 h-12 bg-frihet-ivory text-frihet-brown rounded-xl flex items-center justify-center text-2xl font-bold shadow-md">
                     <i class="fa-solid fa-warehouse"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <span class="bg-frihet-amber text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">생산물류팀</span>
                         <span class="text-xs text-frihet-ivory font-medium">실측 기반 2D 평면 배치 및 품목 관리</span>
                         
                         
                     </div>
-                    <h1 class="text-2xl font-black tracking-tight mt-0.5 text-frihet-ivory">프리헷 물류센터 파렛트 평면 배치도</h1>
+                    <h1 class="title-one-line font-black tracking-tight mt-0.5 text-frihet-ivory">프리헷 물류센터 파렛트 평면 배치도</h1>
                     <p id="last-updated" class="text-[11px] text-frihet-sand mt-1">불러오는 중...</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2.5 flex-wrap w-full md:w-auto justify-end">
+            <div class="flex items-center gap-2.5 flex-wrap w-full xl:w-auto justify-center xl:justify-end">
                 <div class="bg-frihet-darkText/30 p-1 rounded-xl flex items-center gap-1 border border-frihet-sand/30">
                     <button id="view-btn-map2" onclick="switchViewMode('map2')" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow">
                         <i class="fa-solid fa-map mr-1"></i> 제 2공장
@@ -187,6 +191,9 @@
                     </button>
                     <button id="view-btn-list" onclick="switchViewMode('list')" class="px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white border-l border-white/20 pl-4 ml-1">
                         <i class="fa-solid fa-list-check mr-1"></i> 전체 작성표
+                    </button>
+                    <button id="view-btn-incoming" onclick="switchViewMode('incoming')" class="px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white">
+                        <i class="fa-solid fa-truck-ramp-box mr-1"></i> 입고 예정 <span id="incoming-count" class="ml-0.5 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full hidden">0</span>
                     </button>
                 </div>
                 <div class="relative min-w-[200px]">
@@ -378,10 +385,11 @@
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-frihet-sand pb-4 mb-6 gap-3">
                 <div>
                     <h2 class="text-xl font-extrabold text-frihet-brown flex items-center gap-2">
-                        <i class="fa-solid fa-building text-frihet-amber"></i> 제 3공장 평면 배치도 (총 13 PL)
+                        <i class="fa-solid fa-building text-frihet-amber"></i> 제 3공장 · 피킹/패킹 전용 공간 (총 13 PL)
                     </h2>
-                    <p class="text-xs text-gray-500 mt-1">* 3공장 : 실제 출고를 위한 <span class="text-blue-600 font-bold">피킹 및 패킹 작업 공간</span> <span class="text-red-500 font-bold">(최대 1단 적재만 가능)</span></p>
+                    <p class="text-xs text-gray-500 mt-1">* 3공장 : 실제 출고를 위한 <span class="text-blue-600 font-bold">피킹 및 패킹 작업 공간</span> <span class="text-red-500 font-bold">(최대 1단 적재만 가능)</span> · 칸을 눌러 작업 단계와 출고처를 적어두세요</p>
                 </div>
+                <div id="work-summary" class="flex flex-wrap gap-2"></div>
             </div>
 
             <div class="floorplan-canvas p-6 rounded-2xl relative overflow-x-auto min-w-[1100px]">
@@ -482,8 +490,10 @@
                             <th class="p-3 w-40">카테고리</th>
                             <th class="p-3">적재 품목명</th>
                             <th class="p-3 w-28">단수</th>
-                            <th class="p-3 w-28">수량</th>
-                            <th class="p-3 w-32">날짜</th>
+                            <th class="p-3 w-24">수량</th>
+                            <th class="p-3 w-20">단위</th>
+                            <th class="p-3 w-28">입고일</th>
+                            <th class="p-3 w-28">작업 단계 (3공장)</th>
                             <th class="p-3 w-44">비고</th>
                             <th class="p-3 text-center w-20">관리</th>
                         </tr>
@@ -492,10 +502,84 @@
                 </table>
             </div>
         </main>
+
+        <main id="view-container-incoming" class="max-w-7xl mx-auto bg-white rounded-2xl p-6 border border-frihet-sand shadow-xl relative hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-frihet-sand pb-4 mb-5 gap-2">
+                <div>
+                    <h2 class="text-xl font-extrabold text-frihet-brown flex items-center gap-2">
+                        <i class="fa-solid fa-truck-ramp-box text-frihet-amber"></i> 입고 예정 제품
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">입고 예정 제품을 미리 적어두고, 실제로 들어오면 <b class="text-frihet-brick">[입고 완료]</b>를 눌러 파렛트 칸에 바로 넣을 수 있어요. 예정 위치를 정해두면 배치도의 빈 칸에 표시돼요.</p>
+                </div>
+            </div>
+
+            <form id="incoming-form" onsubmit="submitIncoming(event)" class="admin-only bg-frihet-bg/60 border border-frihet-sand rounded-xl p-4 mb-6">
+                <p id="incoming-form-title" class="text-sm font-black text-frihet-brown mb-3"><i class="fa-solid fa-plus mr-1"></i>입고 예정 추가</p>
+                <input type="hidden" id="inc-id">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+                    <div class="col-span-2"><label class="block text-[11px] font-bold text-frihet-brown mb-1">품목명 *</label><input type="text" id="inc-item" required class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">카테고리</label>
+                        <select id="inc-status" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none">
+                            <option value="powder">파우더류</option><option value="dessert">디저트류</option><option value="liquid">액상/시럽</option><option value="sub">부자재</option><option value="etc">기타</option>
+                        </select></div>
+                    <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">수량</label><input type="text" id="inc-qty" inputmode="decimal" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">단위</label><input type="text" id="inc-unit" list="unit-options" value="박스" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">적재 단수</label>
+                        <select id="inc-stack" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"><option value="1">1단</option><option value="2" selected>2단</option></select></div>
+                    <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">입고 예정일</label><input type="date" id="inc-date" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">예정 위치</label><select id="inc-slot" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></select></div>
+                    <div class="col-span-2 md:col-span-3 lg:col-span-6"><label class="block text-[11px] font-bold text-frihet-brown mb-1">비고 (거래처, 발주번호 등)</label><input type="text" id="inc-note" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    <div class="col-span-2 flex items-end gap-2">
+                        <button type="button" id="inc-cancel" onclick="resetIncomingForm()" class="hidden flex-1 py-2.5 text-xs font-bold text-gray-500 bg-white border border-frihet-sand rounded-lg">취소</button>
+                        <button type="submit" id="inc-submit" class="flex-1 py-2.5 text-xs font-bold text-white bg-frihet-brown hover:bg-frihet-brick rounded-lg"><i class="fa-solid fa-plus mr-1"></i>추가</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="overflow-x-auto border border-frihet-sand rounded-xl">
+                <table class="w-full text-left border-collapse text-xs min-w-[860px]">
+                    <thead>
+                        <tr class="bg-frihet-ivory text-frihet-brown font-bold border-b border-frihet-sand">
+                            <th class="p-3 w-24">예정일</th>
+                            <th class="p-3">품목명</th>
+                            <th class="p-3 w-24">카테고리</th>
+                            <th class="p-3 w-28">수량</th>
+                            <th class="p-3 w-16">단수</th>
+                            <th class="p-3 w-28">예정 위치</th>
+                            <th class="p-3 w-44">비고</th>
+                            <th class="p-3 text-center w-48">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incoming-table-body" class="divide-y divide-frihet-sand/40"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <datalist id="unit-options">
+        <option value="박스"></option><option value="개"></option><option value="kg"></option><option value="g"></option>
+        <option value="포"></option><option value="팩"></option><option value="봉"></option><option value="롤"></option>
+        <option value="병"></option><option value="캔"></option><option value="묶음"></option><option value="EA"></option>
+    </datalist>
+
+    <div id="receive-modal" class="fixed inset-0 bg-frihet-brown/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden no-print p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-frihet-sand text-frihet-darkText">
+            <h3 class="text-base font-black text-frihet-brown mb-1"><i class="fa-solid fa-dolly mr-1 text-frihet-amber"></i>입고 완료 처리</h3>
+            <p id="receive-desc" class="text-xs text-gray-500 mb-4"></p>
+            <input type="hidden" id="receive-id">
+            <label class="block text-xs font-bold text-frihet-brown mb-1">넣을 파렛트 칸 (빈 칸만 표시)</label>
+            <select id="receive-slot" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none mb-3"></select>
+            <label class="block text-xs font-bold text-frihet-brown mb-1">입고일</label>
+            <input type="text" id="receive-date" placeholder="예: 10.21" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none mb-4">
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeReceive()" class="px-4 py-2 text-xs font-bold text-gray-500 bg-frihet-bg rounded-lg">취소</button>
+                <button type="button" onclick="confirmReceive()" class="px-4 py-2 text-xs font-bold text-white bg-frihet-brown hover:bg-frihet-brick rounded-lg">파렛트에 넣기</button>
+            </div>
+        </div>
     </div>
 
     <div id="pallet-modal" class="fixed inset-0 bg-frihet-brown/60 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-frihet-sand text-frihet-darkText relative">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md max-h-[92vh] overflow-y-auto shadow-2xl border border-frihet-sand text-frihet-darkText relative">
             <div class="flex items-center justify-between border-b border-frihet-sand pb-3 mb-4">
                 <div class="flex items-center gap-2.5">
                     <span id="modal-slot-id" class="text-xs font-black bg-frihet-amber text-white px-2.5 py-1 rounded-md">A-1</span>
@@ -538,9 +622,21 @@
                     </select>
                 </div>
                 <div><label class="block text-xs font-bold text-frihet-brown mb-1">품목명</label><input type="text" id="modal-item-name" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-bold text-frihet-brown mb-1">수량</label><input type="text" id="modal-qty" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
-                    <div><label class="block text-xs font-bold text-frihet-brown mb-1">입고일</label><input type="text" id="modal-date" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div><label class="block text-xs font-bold text-frihet-brown mb-1">수량</label><input type="text" id="modal-qty" inputmode="decimal" placeholder="예: 36" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    <div><label class="block text-xs font-bold text-frihet-brown mb-1">단위</label><input type="text" id="modal-unit" list="unit-options" placeholder="박스" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    <div><label class="block text-xs font-bold text-frihet-brown mb-1">입고일</label><input type="text" id="modal-date" placeholder="예: 10.21" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                </div>
+                <div id="modal-work-section" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-2">
+                    <p class="text-[11px] font-black text-blue-700"><i class="fa-solid fa-boxes-packing mr-1"></i>3공장 피킹/패킹 작업 정보</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">작업 단계</label>
+                            <select id="modal-work" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none">
+                                <option value="">미지정</option><option value="picking">피킹 대기</option><option value="packing">패킹 중</option><option value="ready">출고 대기</option>
+                            </select></div>
+                        <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">출고처</label><input type="text" id="modal-dest" placeholder="예: 강남점" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                        <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">출고 예정일</label><input type="text" id="modal-ship" placeholder="예: 10.25" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                    </div>
                 </div>
                 <div><label class="block text-xs font-bold text-frihet-brown mb-1">비고</label><textarea id="modal-note" rows="2" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></textarea></div>
                 <div class="flex items-center justify-end gap-2 pt-3 border-t border-frihet-sand">
@@ -629,6 +725,8 @@
         let lastUpdatedAt = null;
         let dirty = false;                   // 작성표에서 고친 뒤 아직 저장 안 한 상태
         const changedKeys = new Set();       // 저장 대기 중인 칸
+        let incoming = {};                   // 입고 예정 목록 {id: {...}}
+        const changedIncoming = new Set();   // 저장 대기 중인 입고 예정 항목
 
         window.handleLogin = handleLogin;
         window.handleLogout = handleLogout;
@@ -642,14 +740,40 @@
         window.setStackHeight = setStackHeight;
         window.updateBatchField = updateBatchField;
         window.handleSearch = handleSearch;
+        window.submitIncoming = submitIncoming;
+        window.resetIncomingForm = resetIncomingForm;
+        window.editIncoming = editIncoming;
+        window.deleteIncoming = deleteIncoming;
+        window.openReceive = openReceive;
+        window.closeReceive = closeReceive;
+        window.confirmReceive = confirmReceive;
 
         function clone(o) { return JSON.parse(JSON.stringify(o)); }
         function markChanged(...keys) { keys.forEach(k => changedKeys.add(k)); }
 
+        // 화면에 글자를 넣을 때 특수문자 처리 (여러 명이 입력하므로 안전하게)
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+        const CAT_LABEL = { powder: '파우더류', dessert: '디저트류', liquid: '액상/시럽', sub: '부자재', etc: '기타', empty: '공파렛트' };
+        const WORK_LABEL = { picking: '피킹 대기', packing: '패킹 중', ready: '출고 대기' };
+        const WORK_STYLE = { picking: 'bg-sky-500', packing: 'bg-violet-600', ready: 'bg-emerald-600' };
+        function fmtQty(it) { const q = (it.qty == null ? '' : String(it.qty)).trim(); if (!q) return ''; return it.unit ? `${q} ${it.unit}` : q; }
+        function pad2(n) { return String(n).padStart(2, '0'); }
+        function todayMD() { const d = new Date(); return `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`; }
+        function mdFromISO(iso) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[2]}.${m[3]}` : (iso || ''); }
+        // 예전 데이터("36 Box", "1,600kg")를 수량과 단위로 나눔
+        function normalizeSlot(it) {
+            if (!it || it.unit !== undefined) return it;
+            const q = (it.qty == null ? '' : String(it.qty)).trim();
+            const m = /^([\d.,]+)\s*(.*)$/.exec(q);
+            if (m) { it.qty = m[1]; it.unit = /^box$/i.test(m[2]) ? '박스' : m[2]; }
+            else it.unit = '';
+            return it;
+        }
+
         function applySlots(parsed) {
             const next = {};
             Object.keys(defaultSlots).forEach(key => {
-                next[key] = (parsed && parsed[key]) ? parsed[key] : clone(defaultSlots[key]);
+                next[key] = normalizeSlot((parsed && parsed[key]) ? parsed[key] : clone(defaultSlots[key]));
                 if (key.startsWith('D-') && next[key].stack > 1) next[key].stack = 1;
                 else if (!key.startsWith('D-') && next[key].stack > 2) next[key].stack = 2;
             });
@@ -658,6 +782,8 @@
 
         function renderEverything() {
             renderAllSlots();
+            renderIncoming();
+            renderWorkSummary();
             if (!document.getElementById('view-container-list').classList.contains('hidden')) renderBatchTable();
             updateSummary();
             handleSearch();
@@ -715,6 +841,7 @@
                 if (data.version === serverVersion) return;   // 바뀐 게 없으면 다시 그리지 않음
                 serverVersion = data.version;
                 applySlots(data.slots);
+                incoming = data.incoming || {};
                 setUpdated(data.updatedAt);
                 renderEverything();
             } catch (e) {
@@ -734,7 +861,7 @@
             else showLogin();
             setInterval(() => {
                 const modalOpen = !document.getElementById('pallet-modal').classList.contains('hidden');
-                if (!isAdmin || dirty || dragKey || modalOpen || changedKeys.size) return;   // 편집 중엔 덮어쓰지 않음
+                if (!isAdmin || dirty || dragKey || modalOpen || changedKeys.size || changedIncoming.size || !document.getElementById('receive-modal').classList.contains('hidden') || document.getElementById('inc-id').value) return;   // 편집 중엔 덮어쓰지 않음
                 loadFromServer(true);
             }, POLL_MS);
             window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -781,9 +908,10 @@
         }
 
         function handleLogout() {
-            if ((dirty || changedKeys.size) && !window.confirm('저장하지 않은 변경 사항이 있습니다. 그래도 로그아웃할까요?')) return;
+            if ((dirty || changedKeys.size || changedIncoming.size) && !window.confirm('저장하지 않은 변경 사항이 있습니다. 그래도 로그아웃할까요?')) return;
             dirty = false;
             changedKeys.clear();
+            changedIncoming.clear();
             writeToken('');
             serverVersion = -1;
             previewMode = false;
@@ -791,7 +919,7 @@
         }
 
         function downloadBackup() {
-            const blob = new Blob([JSON.stringify({ version: serverVersion, updatedAt: lastUpdatedAt, slots: slots }, null, 1)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify({ version: serverVersion, updatedAt: lastUpdatedAt, slots: slots, incoming: incoming }, null, 1)], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = 'layout.json';
@@ -802,15 +930,17 @@
 
         async function saveData(s = true, full = false) {
             if (!isAdmin) return;
-            if (!full && !changedKeys.size) { dirty = false; if (s) showToast('저장할 변경 사항이 없어요.'); return; }
+            if (!full && !changedKeys.size && !changedIncoming.size) { dirty = false; if (s) showToast('저장할 변경 사항이 없어요.'); return; }
             if (previewMode) {
-                dirty = false; changedKeys.clear();
+                dirty = false; changedKeys.clear(); changedIncoming.clear();
                 document.getElementById('last-updated').innerText = `🧪 미리보기 모드 · ${new Date().toLocaleTimeString('ko-KR')} 테스트 저장 (실제 사이트에는 반영 안 됨)`;
                 if (s) showToast('🧪 미리보기라 이 화면에서만 저장됐어요');
                 return;
             }
             const sending = full ? null : Array.from(changedKeys);
+            const sendingInc = Array.from(changedIncoming);
             const body = full ? { slots: slots } : { changes: Object.fromEntries(sending.map(k => [k, slots[k]])) };
+            if (sendingInc.length) body.incomingChanges = Object.fromEntries(sendingInc.map(id => [id, incoming[id] || null]));
             try {
                 const r = await fetch(API_LAYOUT, {
                     method: 'PUT',
@@ -821,9 +951,11 @@
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 const data = await r.json();
                 if (full) changedKeys.clear(); else sending.forEach(k => changedKeys.delete(k));
+                sendingInc.forEach(id => changedIncoming.delete(id));
                 dirty = changedKeys.size > 0;
                 serverVersion = data.version;
                 applySlots(data.slots);            // 다른 사람이 그사이 고친 칸도 함께 반영
+                incoming = data.incoming || {};
                 setUpdated(data.updatedAt);
                 renderEverything();
                 if (s) showToast('저장 완료 (전 부서 화면에 반영됩니다)');
@@ -851,10 +983,16 @@
                 else if (item.status === 'etc') { statusBadge = '<span class="text-[9px] bg-slate-500 text-white font-black px-1.5 py-0.5 rounded">기타</span>'; styleClass = 'square-etc'; }
 
                 const hasItem = item.status !== 'empty' && item.item;
+                const is3F = key.startsWith('D-');
+                if (is3F && hasItem && WORK_LABEL[item.work]) statusBadge = `<span class="text-[9px] ${WORK_STYLE[item.work]} text-white font-black px-1.5 py-0.5 rounded">${WORK_LABEL[item.work]}</span>`;
+                const plan = !hasPallet(item) ? Object.values(incoming).filter(x => x.slot === key).sort((a, b) => (a.date || '').localeCompare(b.date || ''))[0] : null;
+                let infoLine = '';
+                if (hasItem && is3F && (item.dest || item.shipDate)) infoLine = `<i class="fa-solid fa-truck-fast mr-0.5"></i>${esc(item.dest || '')}${item.dest && item.shipDate ? ' · ' : ''}${item.shipDate ? esc(item.shipDate) + ' 출고' : ''}`;
+                else if (hasItem && item.date) infoLine = `<i class="fa-regular fa-calendar mr-0.5"></i>입고 ${esc(item.date)}`;
                 const fixedBadge = item.isFixed ? `<div class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md z-30" title="고정석"><i class="fa-solid fa-lock text-[10px]"></i></div>` : '';
 
                 const tile = document.createElement('div');
-                tile.className = `pallet-square ${styleClass} p-2.5 rounded-xl cursor-pointer flex flex-col justify-between w-full relative`;
+                tile.className = `pallet-square ${styleClass}${plan ? ' incoming-tag' : ''} p-2.5 rounded-xl cursor-pointer flex flex-col justify-between w-full relative`;
                 tile.id = `card-${key}`;
                 tile.onclick = () => openModal(key);
                 if (isAdmin) attachDrag(tile, key, hasPallet(item));
@@ -863,9 +1001,14 @@
                     <div class="flex items-center justify-between border-b border-frihet-sand/50 pb-1">
                         <span class="text-[11px] font-black text-white bg-frihet-brown px-2 py-0.5 rounded">${key}</span>${statusBadge}
                     </div>
-                    <div class="my-2"><p class="text-[12px] font-black ${hasItem ? 'text-frihet-brown' : 'text-gray-400 font-normal'} truncate leading-tight">${hasItem ? item.item : '미적재 (공파렛트)'}</p></div>
+                    <div class="my-1.5 min-w-0">
+                        ${plan
+                            ? `<p class="text-[11px] font-black text-frihet-brick truncate leading-tight"><i class="fa-solid fa-truck-ramp-box mr-0.5"></i>입고 예정</p><p class="text-[10px] text-frihet-brown truncate leading-tight mt-0.5">${esc(plan.item)}${plan.date ? ' · ' + esc(mdFromISO(plan.date)) : ''}</p>`
+                            : `<p class="text-[12px] font-black ${hasItem ? 'text-frihet-brown' : 'text-gray-400 font-normal'} truncate leading-tight">${hasItem ? esc(item.item) : '미적재 (공파렛트)'}</p>
+                               ${infoLine ? `<p class="text-[10px] text-gray-500 truncate leading-tight mt-0.5">${infoLine}</p>` : ''}`}
+                    </div>
                     <div class="flex items-center justify-between text-[10px] text-gray-500 pt-1 border-t border-frihet-sand/30 mt-auto">
-                        <span class="font-bold text-frihet-brick">${hasItem && item.qty ? item.qty : '-'}</span>
+                        <span class="font-bold text-frihet-brick truncate">${hasItem && fmtQty(item) ? esc(fmtQty(item)) : '-'}</span>
                         <span class="bg-frihet-ivory text-frihet-brown font-black px-1.5 py-0.2 rounded border border-frihet-sand">${hasItem && item.stack ? item.stack + '단' : '0단'}</span>
                     </div>`;
                 container.appendChild(tile);
@@ -889,11 +1032,13 @@
                     <td class="p-2.5 text-center font-bold text-frihet-brown">${key} ${fixedIcon}</td>
                     <td class="p-2.5 text-gray-500">${item.zone || '물류센터'}</td>
                     <td class="p-2"><select onchange="updateBatchField('${key}', 'status', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"><option value="empty" ${item.status === 'empty' ? 'selected' : ''}>공파렛트</option><option value="powder" ${item.status === 'powder' ? 'selected' : ''}>파우더류</option><option value="dessert" ${item.status === 'dessert' ? 'selected' : ''}>디저트류</option><option value="liquid" ${item.status === 'liquid' ? 'selected' : ''}>액상/시럽</option><option value="sub" ${item.status === 'sub' ? 'selected' : ''}>부자재</option><option value="etc" ${item.status === 'etc' ? 'selected' : ''}>기타</option></select></td>
-                    <td class="p-2"><input type="text" value="${item.item || ''}" onchange="updateBatchField('${key}', 'item', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2"><input type="text" value="${esc(item.item)}" onchange="updateBatchField('${key}', 'item', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
                     <td class="p-2"><select onchange="updateBatchField('${key}', 'stack', parseInt(this.value))" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded">${stackOptions}</select></td>
-                    <td class="p-2"><input type="text" value="${item.qty || ''}" onchange="updateBatchField('${key}', 'qty', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
-                    <td class="p-2"><input type="text" value="${item.date || ''}" onchange="updateBatchField('${key}', 'date', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
-                    <td class="p-2"><input type="text" value="${item.note || ''}" onchange="updateBatchField('${key}', 'note', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2"><input type="text" inputmode="decimal" value="${esc(item.qty)}" onchange="updateBatchField('${key}', 'qty', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2"><input type="text" list="unit-options" value="${esc(item.unit)}" onchange="updateBatchField('${key}', 'unit', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2"><input type="text" value="${esc(item.date)}" placeholder="예: 10.21" onchange="updateBatchField('${key}', 'date', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
+                    <td class="p-2">${key.startsWith('D-') ? `<select onchange="updateBatchField('${key}', 'work', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"><option value="">미지정</option>${Object.entries(WORK_LABEL).map(([v, l]) => `<option value="${v}" ${item.work === v ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '<span class="text-gray-300">-</span>'}</td>
+                    <td class="p-2"><input type="text" value="${esc(item.note)}" onchange="updateBatchField('${key}', 'note', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
                     <td class="p-2 text-center"><button onclick="openModal('${key}')" class="px-2 py-1 bg-frihet-brown text-white text-[10px] rounded hover:bg-frihet-brick font-bold">${isAdmin ? '상세' : '보기'}</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -904,20 +1049,24 @@
             if (!isAdmin) return;
             dirty = true; markChanged(k);
             slots[k][f] = v; 
-            if (f === 'status' && v === 'empty') { slots[k].stack = 0; slots[k].item = ''; slots[k].qty = ''; } 
-            renderAllSlots(); updateSummary(); 
+            if (f === 'status' && v === 'empty') { Object.assign(slots[k], { stack: 0, item: '', qty: '', unit: '', work: '', dest: '', shipDate: '' }); } 
+            renderAllSlots(); updateSummary(); renderWorkSummary(); 
         }
 
         function switchViewMode(m) {
             document.getElementById('view-container-map2').classList.toggle('hidden', m !== 'map2');
             document.getElementById('view-container-map3').classList.toggle('hidden', m !== 'map3');
             document.getElementById('view-container-list').classList.toggle('hidden', m !== 'list');
+            document.getElementById('view-container-incoming').classList.toggle('hidden', m !== 'incoming');
+            const off = 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white', on = 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow';
+            document.getElementById('view-btn-incoming').className = m === 'incoming' ? on : off;
             
             document.getElementById('view-btn-map2').className = m === 'map2' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white';
             document.getElementById('view-btn-map3').className = m === 'map3' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white';
             document.getElementById('view-btn-list').className = m === 'list' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow border-l border-white/20 pl-4 ml-1' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white border-l border-white/20 pl-4 ml-1';
             
             if (m === 'list') renderBatchTable();
+            if (m === 'incoming') renderIncoming();
         }
 
         function updateSummary() {
@@ -942,6 +1091,11 @@
             document.getElementById('modal-slot-key').value = k; document.getElementById('modal-slot-id').innerText = k;
             document.getElementById('modal-status').value = item.status || 'empty'; document.getElementById('modal-item-name').value = item.item || '';
             document.getElementById('modal-qty').value = item.qty || ''; document.getElementById('modal-date').value = item.date || ''; document.getElementById('modal-note').value = item.note || '';
+            document.getElementById('modal-unit').value = item.unit || (item.status === 'empty' ? '박스' : '');
+            document.getElementById('modal-work-section').classList.toggle('hidden', !k.startsWith('D-'));
+            document.getElementById('modal-work').value = item.work || '';
+            document.getElementById('modal-dest').value = item.dest || '';
+            document.getElementById('modal-ship').value = item.shipDate || '';
             document.getElementById('modal-is-fixed').checked = item.isFixed === true;
             
             const is3F = k.startsWith('D-');
@@ -960,13 +1114,161 @@
             document.getElementById('pallet-modal').classList.remove('hidden');
         }
 
+        // ===== 3공장 피킹/패킹 현황 =====
+        function renderWorkSummary() {
+            const box = document.getElementById('work-summary');
+            if (!box) return;
+            const keys = Object.keys(defaultSlots).filter(k => k.startsWith('D-'));
+            const cnt = { picking: 0, packing: 0, ready: 0, none: 0, empty: 0 };
+            keys.forEach(k => { const it = slots[k]; if (!hasPallet(it)) cnt.empty++; else if (WORK_LABEL[it.work]) cnt[it.work]++; else cnt.none++; });
+            const chip = (cls, label, n) => `<span class="text-[11px] font-black text-white ${cls} px-2.5 py-1 rounded-full">${label} ${n}</span>`;
+            box.innerHTML = chip('bg-sky-500', '피킹 대기', cnt.picking) + chip('bg-violet-600', '패킹 중', cnt.packing) + chip('bg-emerald-600', '출고 대기', cnt.ready)
+                + (cnt.none ? chip('bg-slate-400', '단계 미지정', cnt.none) : '') + `<span class="text-[11px] font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">빈 칸 ${cnt.empty}</span>`;
+        }
+
+        // ===== 입고 예정 =====
+        function newId() { return 'in-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+        function emptySlotOptions(selected, allowNone) {
+            const keys = Object.keys(defaultSlots).filter(k => !hasPallet(slots[k]));
+            const f2 = keys.filter(k => !k.startsWith('D-')), f3 = keys.filter(k => k.startsWith('D-'));
+            const opt = k => `<option value="${k}" ${k === selected ? 'selected' : ''}>${k}</option>`;
+            return (allowNone ? `<option value="">${allowNone}</option>` : '')
+                + (f2.length ? `<optgroup label="제 2공장 빈 칸">${f2.map(opt).join('')}</optgroup>` : '')
+                + (f3.length ? `<optgroup label="제 3공장 빈 칸">${f3.map(opt).join('')}</optgroup>` : '');
+        }
+
+        function renderIncoming() {
+            const list = Object.entries(incoming).map(([id, v]) => Object.assign({ id }, v)).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
+            const badge = document.getElementById('incoming-count');
+            if (badge) { badge.innerText = list.length; badge.classList.toggle('hidden', !list.length); }
+            const sel = document.getElementById('inc-slot');
+            if (sel && !document.getElementById('inc-id').value) sel.innerHTML = emptySlotOptions('', '미정 (입고할 때 고르기)');
+            const tbody = document.getElementById('incoming-table-body');
+            if (!tbody) return;
+            if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-gray-400">등록된 입고 예정 제품이 없어요.</td></tr>'; return; }
+            const today = new Date(); const iso = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`;
+            tbody.innerHTML = list.map(x => {
+                const late = x.date && x.date < iso, isToday = x.date === iso;
+                const slotOk = x.slot && !hasPallet(slots[x.slot]);
+                return `<tr class="${isToday ? 'bg-amber-50' : ''}">
+                    <td class="p-2.5 font-bold ${late ? 'text-red-500' : 'text-frihet-brown'}">${x.date ? esc(mdFromISO(x.date)) : '-'}${isToday ? ' <span class="text-[10px] bg-frihet-amber text-white px-1 rounded">오늘</span>' : ''}${late ? ' <span class="text-[10px] text-red-500">(지남)</span>' : ''}</td>
+                    <td class="p-2.5 font-bold text-frihet-darkText">${esc(x.item)}</td>
+                    <td class="p-2.5 text-gray-600">${CAT_LABEL[x.status] || '-'}</td>
+                    <td class="p-2.5 text-frihet-brick font-bold">${esc(fmtQty(x)) || '-'}</td>
+                    <td class="p-2.5">${x.stack ? x.stack + '단' : '-'}</td>
+                    <td class="p-2.5">${x.slot ? `<span class="font-bold ${slotOk ? 'text-frihet-brown' : 'text-red-500'}">${esc(x.slot)}</span>${slotOk ? '' : ' <span class="text-[10px] text-red-500">(사용 중)</span>'}` : '<span class="text-gray-400">미정</span>'}</td>
+                    <td class="p-2.5 text-gray-500 truncate max-w-[180px]">${esc(x.note)}</td>
+                    <td class="p-2 text-center whitespace-nowrap">
+                        <button onclick="openReceive('${x.id}')" class="px-2.5 py-1.5 bg-frihet-brown hover:bg-frihet-brick text-white text-[11px] rounded-lg font-bold"><i class="fa-solid fa-dolly mr-1"></i>입고 완료</button>
+                        <button onclick="editIncoming('${x.id}')" class="px-2 py-1.5 bg-frihet-ivory text-frihet-brown text-[11px] rounded-lg font-bold border border-frihet-sand">수정</button>
+                        <button onclick="deleteIncoming('${x.id}')" class="px-2 py-1.5 text-red-500 text-[11px] rounded-lg font-bold hover:bg-red-50">삭제</button>
+                    </td></tr>`;
+            }).join('');
+        }
+
+        function resetIncomingForm() {
+            document.getElementById('incoming-form').reset();
+            document.getElementById('inc-id').value = '';
+            document.getElementById('inc-unit').value = '박스';
+            document.getElementById('inc-stack').value = '2';
+            document.getElementById('incoming-form-title').innerHTML = '<i class="fa-solid fa-plus mr-1"></i>입고 예정 추가';
+            document.getElementById('inc-submit').innerHTML = '<i class="fa-solid fa-plus mr-1"></i>추가';
+            document.getElementById('inc-cancel').classList.add('hidden');
+            renderIncoming();
+        }
+
+        function submitIncoming(e) {
+            e.preventDefault();
+            if (!isAdmin) return;
+            const id = document.getElementById('inc-id').value || newId();
+            const slot = document.getElementById('inc-slot').value;
+            let stack = parseInt(document.getElementById('inc-stack').value || '1');
+            if (slot.startsWith('D-') && stack > 1) stack = 1;
+            incoming[id] = {
+                item: document.getElementById('inc-item').value.trim(),
+                status: document.getElementById('inc-status').value,
+                qty: document.getElementById('inc-qty').value.trim(),
+                unit: document.getElementById('inc-unit').value.trim(),
+                stack: stack,
+                date: document.getElementById('inc-date').value,
+                slot: slot,
+                note: document.getElementById('inc-note').value.trim(),
+                createdAt: (incoming[id] && incoming[id].createdAt) || Date.now()
+            };
+            const editing = !!document.getElementById('inc-id').value;
+            changedIncoming.add(id);
+            resetIncomingForm();
+            renderAllSlots();
+            saveData(false).then(() => showToast(editing ? '입고 예정을 수정했어요.' : '입고 예정을 추가했어요.'));
+        }
+
+        function editIncoming(id) {
+            const x = incoming[id]; if (!x || !isAdmin) return;
+            document.getElementById('inc-id').value = id;
+            document.getElementById('inc-item').value = x.item || '';
+            document.getElementById('inc-status').value = x.status || 'etc';
+            document.getElementById('inc-qty').value = x.qty || '';
+            document.getElementById('inc-unit').value = x.unit || '';
+            document.getElementById('inc-stack').value = String(x.stack || 1);
+            document.getElementById('inc-date').value = x.date || '';
+            document.getElementById('inc-slot').innerHTML = emptySlotOptions(x.slot, '미정 (입고할 때 고르기)');
+            if (x.slot && !document.querySelector(`#inc-slot option[value="${x.slot}"]`)) document.getElementById('inc-slot').insertAdjacentHTML('beforeend', `<option value="${esc(x.slot)}" selected>${esc(x.slot)} (사용 중)</option>`);
+            document.getElementById('inc-note').value = x.note || '';
+            document.getElementById('incoming-form-title').innerHTML = '<i class="fa-solid fa-pen mr-1"></i>입고 예정 수정';
+            document.getElementById('inc-submit').innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i>수정 저장';
+            document.getElementById('inc-cancel').classList.remove('hidden');
+            document.getElementById('incoming-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function deleteIncoming(id) {
+            const x = incoming[id]; if (!x || !isAdmin) return;
+            if (!window.confirm(`[${x.item}] 입고 예정을 삭제할까요?`)) return;
+            delete incoming[id];
+            changedIncoming.add(id);
+            renderEverything();
+            saveData(false).then(() => showToast('입고 예정을 삭제했어요.'));
+        }
+
+        function openReceive(id) {
+            const x = incoming[id]; if (!x || !isAdmin) return;
+            document.getElementById('receive-id').value = id;
+            document.getElementById('receive-desc').innerText = `${x.item}${fmtQty(x) ? ' · ' + fmtQty(x) : ''}${x.stack ? ' · ' + x.stack + '단' : ''}`;
+            const prefer = x.slot && !hasPallet(slots[x.slot]) ? x.slot : '';
+            document.getElementById('receive-slot').innerHTML = emptySlotOptions(prefer, '칸을 고르세요');
+            document.getElementById('receive-date').value = todayMD();
+            document.getElementById('receive-modal').classList.remove('hidden');
+        }
+
+        function closeReceive() { document.getElementById('receive-modal').classList.add('hidden'); }
+
+        function confirmReceive() {
+            const id = document.getElementById('receive-id').value;
+            const x = incoming[id]; if (!x) return closeReceive();
+            const k = document.getElementById('receive-slot').value;
+            if (!k) { showToast('넣을 파렛트 칸을 골라주세요.'); return; }
+            if (hasPallet(slots[k])) { showToast(`${k}에는 이미 파렛트가 있어요. 빈 칸을 골라주세요.`); return; }
+            let stack = parseInt(x.stack || 1);
+            if (k.startsWith('D-') && stack > 1) stack = 1;
+            slots[k] = Object.assign({}, slots[k], {
+                name: k, zone: defaultSlots[k]?.zone, status: x.status || 'etc', stack: stack, item: x.item || '',
+                qty: x.qty || '', unit: x.unit || '', date: document.getElementById('receive-date').value.trim(), note: x.note || '',
+                work: '', dest: '', shipDate: ''
+            });
+            delete incoming[id];
+            markChanged(k);
+            changedIncoming.add(id);
+            closeReceive();
+            renderEverything();
+            saveData(false).then(() => showToast(`[${x.item}] ${k}에 입고 완료! 배치도에 반영됐어요.`));
+        }
+
         // ===== 파렛트 이동 =====
-        const MOVE_FIELDS = ['status', 'stack', 'item', 'qty', 'date', 'note'];
+        const MOVE_FIELDS = ['status', 'stack', 'item', 'qty', 'unit', 'date', 'note', 'work', 'dest', 'shipDate'];
         let dragKey = null;
         window.moveFromModal = moveFromModal;
 
         function hasPallet(s) { return !!s && s.status !== 'empty'; }
-        function emptyContent() { return { status: 'empty', stack: 0, item: '', qty: '', date: '', note: '' }; }
+        function emptyContent() { return { status: 'empty', stack: 0, item: '', qty: '', unit: '', date: '', note: '', work: '', dest: '', shipDate: '' }; }
         function pickContent(s) { const o = {}; MOVE_FIELDS.forEach(f => o[f] = s[f] === undefined ? '' : s[f]); return o; }
         function labelOf(s) { return hasPallet(s) ? (s.item || '이름 없는 파렛트') : '빈 칸'; }
 
@@ -981,6 +1283,8 @@
             if (to.startsWith('D-') && ca.stack > 1) { ca.stack = 1; notes.push(`3공장 칸은 최대 1단이라 [${ca.item}]은(는) 1단으로 바뀌어요.`); }
             if (swap && from.startsWith('D-') && cb.stack > 1) { cb.stack = 1; notes.push(`3공장 칸은 최대 1단이라 [${cb.item}]은(는) 1단으로 바뀌어요.`); }
             if (a.isFixed || b.isFixed) notes.push('자물쇠(고정석) 표시는 칸에 그대로 남아요.');
+            if (!to.startsWith('D-')) { ca.work = ''; ca.dest = ''; ca.shipDate = ''; }
+            if (swap && !from.startsWith('D-')) { cb.work = ''; cb.dest = ''; cb.shipDate = ''; }
             const msg = swap
                 ? `${to}에는 이미 [${labelOf(b)}]이(가) 있어요.\n${from} ↔ ${to} 두 파렛트의 자리를 서로 바꿀까요?`
                 : `[${labelOf(a)}] 파렛트를 ${from} → ${to}(으)로 옮길까요?`;
@@ -1058,7 +1362,11 @@
                 status: st, 
                 stack: st === 'empty' ? 0 : parseInt(document.getElementById('modal-stack-height').value || 0), 
                 item: st === 'empty' ? '' : document.getElementById('modal-item-name').value, 
-                qty: st === 'empty' ? '' : document.getElementById('modal-qty').value, 
+                qty: st === 'empty' ? '' : document.getElementById('modal-qty').value.trim(), 
+                unit: st === 'empty' ? '' : document.getElementById('modal-unit').value.trim(),
+                work: st === 'empty' || !k.startsWith('D-') ? '' : document.getElementById('modal-work').value,
+                dest: st === 'empty' || !k.startsWith('D-') ? '' : document.getElementById('modal-dest').value.trim(),
+                shipDate: st === 'empty' || !k.startsWith('D-') ? '' : document.getElementById('modal-ship').value.trim(),
                 date: st === 'empty' ? '' : document.getElementById('modal-date').value, 
                 note: st === 'empty' ? '' : document.getElementById('modal-note').value,
                 isFixed: document.getElementById('modal-is-fixed').checked
@@ -1083,7 +1391,7 @@
             const q = document.getElementById('search-input').value.trim().toLowerCase();
             Object.keys(defaultSlots).forEach(k => {
                 const card = document.getElementById(`card-${k}`); if (!card) return; card.classList.remove('search-highlight');
-                if (q.length > 0) { const i = slots[k] || {}; if ((i.item && i.item.toLowerCase().includes(q)) || k.toLowerCase().includes(q) || (i.note && i.note.toLowerCase().includes(q))) card.classList.add('search-highlight'); }
+                if (q.length > 0) { const i = slots[k] || {}; if ((i.item && i.item.toLowerCase().includes(q)) || k.toLowerCase().includes(q) || (i.note && i.note.toLowerCase().includes(q)) || (i.dest && i.dest.toLowerCase().includes(q))) card.classList.add('search-highlight'); }
             });
         }
         

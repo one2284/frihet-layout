@@ -105,12 +105,13 @@ def read_layout():
         ts = seed.get("updatedAt")
         if isinstance(ts, (int, float)) and ts > 10**11:  # 밀리초 → 초
             ts = int(ts // 1000)
-        return {"version": 0, "updatedAt": ts, "slots": seed.get("slots")}
+        return {"version": 0, "updatedAt": ts, "slots": seed.get("slots"),
+                "incoming": seed.get("incoming") if isinstance(seed.get("incoming"), dict) else {}}
     except Exception:
-        return {"version": 0, "updatedAt": None, "slots": None}
+        return {"version": 0, "updatedAt": None, "slots": None, "incoming": {}}
 
 
-def write_layout(slots, current):
+def write_layout(slots, incoming, current):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     BACKUPS.mkdir(exist_ok=True)
     if LAYOUT.exists():  # 이전 버전 백업
@@ -120,7 +121,7 @@ def write_layout(slots, current):
         old = sorted(BACKUPS.glob("layout-*.json"))
         for f in old[:-KEEP_BACKUPS]:
             f.unlink(missing_ok=True)
-    new = {"version": current["version"] + 1, "updatedAt": int(time.time()), "slots": slots}
+    new = {"version": current["version"] + 1, "updatedAt": int(time.time()), "slots": slots, "incoming": incoming}
     tmp = LAYOUT.with_suffix(".tmp")
     tmp.write_text(json.dumps(new, ensure_ascii=False), encoding="utf-8")
     os.replace(tmp, LAYOUT)  # 쓰는 도중 끊겨도 파일이 깨지지 않도록 원자적 교체
@@ -199,18 +200,30 @@ class Handler(BaseHTTPRequestHandler):
             payload = self.read_json()
         except Exception:
             return self.send_json(400, {"error": "bad json"})
+        full = payload.get("slots")
+        changes = payload.get("changes")
+        inc_changes = payload.get("incomingChanges")
+        if not any(isinstance(x, dict) for x in (full, changes, inc_changes)):
+            return self.send_json(400, {"error": "bad json"})
         with LOCK:
             current = read_layout()
-            if isinstance(payload.get("slots"), dict):        # 전체 저장 (초기화 등)
-                slots = payload["slots"]
-            elif isinstance(payload.get("changes"), dict):    # 바뀐 칸만 저장 → 다른 사람 수정과 합침
-                slots = dict(current.get("slots") or {})
-                for k, v in payload["changes"].items():
+            slots = dict(current.get("slots") or {})
+            if isinstance(full, dict):                       # 전체 저장 (초기화 등)
+                slots = full
+            if isinstance(changes, dict):                    # 바뀐 칸만 저장 → 다른 사람 수정과 합침
+                for k, v in changes.items():
                     if isinstance(k, str) and len(k) <= 20 and isinstance(v, dict):
                         slots[k] = v
-            else:
-                return self.send_json(400, {"error": "bad json"})
-            saved = write_layout(slots, current)
+            incoming = dict(current.get("incoming") or {})   # 입고 예정 목록 (항목별로 합침, null 이면 삭제)
+            if isinstance(inc_changes, dict):
+                for k, v in inc_changes.items():
+                    if not isinstance(k, str) or len(k) > 40:
+                        continue
+                    if v is None:
+                        incoming.pop(k, None)
+                    elif isinstance(v, dict):
+                        incoming[k] = v
+            saved = write_layout(slots, incoming, current)
         self.send_json(200, saved)
 
     def log_message(self, fmt, *args):
