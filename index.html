@@ -104,6 +104,14 @@
 
         /* 검색 하이라이트 인디케이터 */
         .search-highlight { animation: highlight-pulse 1.2s infinite alternate; }
+        /* 숫자 카드 클릭 → 해당 칸 강조 */
+        .focus-mode .pallet-square:not(.slot-focus) { opacity: 0.28; filter: grayscale(0.7); }
+        .pallet-square.slot-focus { outline: 3px solid #C0783E; outline-offset: 2px; animation: focus-pulse 0.9s ease-in-out 3; }
+        @keyframes focus-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+        .stat-click { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+        .stat-click:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(78, 53, 37, .15); }
+        .box-flash { animation: box-flash 1s ease-in-out 2; }
+        @keyframes box-flash { 0%, 100% { box-shadow: 0 0 0 0 rgba(192, 120, 62, 0); } 50% { box-shadow: 0 0 0 6px rgba(192, 120, 62, .45); } }
         /* 제목 한 줄 유지 */
         .title-one-line { white-space: nowrap; font-size: clamp(1.05rem, 4.2vw, 1.5rem); line-height: 1.25; }
         /* 입고 예정 표시 */
@@ -183,7 +191,10 @@
 
             <div class="flex items-center gap-2.5 flex-wrap w-full xl:w-auto justify-center xl:justify-end">
                 <div class="bg-frihet-darkText/30 p-1 rounded-xl flex items-center gap-1 border border-frihet-sand/30">
-                    <button id="view-btn-map2" onclick="switchViewMode('map2')" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow">
+                    <button id="view-btn-overview" onclick="switchViewMode('overview')" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow">
+                        <i class="fa-solid fa-chart-simple mr-1"></i> 전체 현황
+                    </button>
+                    <button id="view-btn-map2" onclick="switchViewMode('map2')" class="px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white">
                         <i class="fa-solid fa-map mr-1"></i> 제 2공장
                     </button>
                     <button id="view-btn-map3" onclick="switchViewMode('map3')" class="px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white">
@@ -221,26 +232,29 @@
         <section class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">전체 총 보관 용량</p>
-                    <p class="text-2xl font-black text-frihet-brown mt-0.5">39 <span class="text-xs font-normal text-gray-500">PL</span></p>
+                    <p id="stat-total-label" class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">전체 총 보관 용량</p>
+                    <p class="text-2xl font-black text-frihet-brown mt-0.5"><span id="stat-total">39</span> <span class="text-xs font-normal text-gray-500">PL</span></p>
+                    <p id="stat-total-sub" class="text-[10px] text-gray-400 mt-0.5"></p>
                 </div>
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-frihet-ivory text-frihet-brown flex items-center justify-center text-lg font-bold border border-frihet-sand">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
+            <div onclick="focusSlots('used')" title="눌러서 적재 중인 칸 위치 보기" class="stat-click bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
                 <div>
                     <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">현재 적재 중 파렛트</p>
-                    <p class="text-2xl font-black text-frihet-amber mt-0.5"><span id="stat-used">0</span> <span class="text-xs font-normal text-gray-400">/ 39 PL</span></p>
+                    <p class="text-2xl font-black text-frihet-amber mt-0.5"><span id="stat-used">0</span> <span id="stat-used-of" class="text-xs font-normal text-gray-400">/ 39 PL</span></p>
+                    <p id="stat-used-sub" class="text-[10px] text-gray-400 mt-0.5"></p>
                 </div>
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-amber-50 text-frihet-amber flex items-center justify-center text-lg font-bold border border-amber-200">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
+            <div onclick="focusSlots('empty')" title="눌러서 빈 칸 위치 보기" class="stat-click bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
                 <div>
                     <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">공파렛트 (잔여 슬롯)</p>
                     <p class="text-2xl font-black text-frihet-olive mt-0.5"><span id="stat-empty">0</span> <span class="text-xs font-normal text-gray-400">PL</span></p>
+                    <p id="stat-empty-sub" class="text-[10px] text-gray-400 mt-0.5"></p>
                 </div>
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-emerald-50 text-frihet-olive flex items-center justify-center text-lg font-bold border border-emerald-200">
                     <i class="fa-solid fa-border-none"></i>
@@ -248,8 +262,9 @@
             </div>
             <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">통합 보관 가동률</p>
+                    <p id="stat-rate-label" class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">통합 보관 가동률</p>
                     <p class="text-2xl font-black text-frihet-brown mt-0.5" id="stat-rate">0%</p>
+                    <p id="stat-rate-sub" class="text-[10px] text-gray-400 mt-0.5"></p>
                 </div>
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-frihet-ivory text-frihet-brown flex items-center justify-center text-lg font-bold border border-frihet-sand">
                     <i class="fa-solid fa-chart-pie"></i>
@@ -257,7 +272,23 @@
             </div>
         </section>
 
-        <main id="view-container-map2" class="max-w-7xl mx-auto bg-white rounded-2xl p-6 border border-frihet-sand shadow-xl relative">
+        <div id="focus-bar" class="hidden max-w-7xl mx-auto mb-4 no-print bg-frihet-brown text-frihet-ivory rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 shadow">
+            <span class="text-xs font-bold"><i class="fa-solid fa-location-crosshairs mr-1.5 text-frihet-amber"></i><span id="focus-text"></span></span>
+            <button onclick="clearSlotFocus()" class="text-[11px] font-bold bg-white/15 hover:bg-white/25 px-3 py-1 rounded-lg">표시 해제</button>
+        </div>
+
+        <main id="view-container-overview" class="max-w-7xl mx-auto space-y-6">
+            <div id="factory-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="empty-list-box" class="bg-white rounded-2xl p-6 border border-frihet-sand shadow-xl">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-frihet-sand pb-3 mb-4">
+                    <h2 class="text-lg font-extrabold text-frihet-brown flex items-center gap-2"><i class="fa-solid fa-border-none text-frihet-olive"></i> 빈 칸(공파렛트) 위치</h2>
+                    <p class="text-xs text-gray-500">칸 번호를 누르면 배치도에서 바로 위치를 보여줘요</p>
+                </div>
+                <div id="empty-list" class="space-y-4"></div>
+            </div>
+        </main>
+
+        <main id="view-container-map2" class="max-w-7xl mx-auto bg-white rounded-2xl p-6 border border-frihet-sand shadow-xl relative hidden">
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-frihet-sand pb-4 mb-6 gap-3">
                 <div>
                     <h2 class="text-xl font-extrabold text-frihet-brown flex items-center gap-2">
@@ -708,6 +739,10 @@
 
         const defaultSlots = { ...factory2Slots, ...factory3Slots };
         let slots = {};
+        var currentView = 'overview';
+        var VIEWS = ['overview', 'map2', 'map3', 'list', 'incoming'];
+        var SCOPE_NAME = { all: '전체', f2: '제 2공장', f3: '제 3공장' };
+        var focusSpec = null;   // { kind: 'used' | 'empty' | 'single', key? }
 
         // ===== 서버 연동 설정 =====
         // 페이지가 하위 경로에 붙어도 API 주소가 맞게 잡히도록 기준 경로 계산
@@ -740,6 +775,9 @@
         window.setStackHeight = setStackHeight;
         window.updateBatchField = updateBatchField;
         window.handleSearch = handleSearch;
+        window.focusSlots = focusSlots;
+        window.clearSlotFocus = clearSlotFocus;
+        window.jumpToSlot = jumpToSlot;
         window.submitIncoming = submitIncoming;
         window.resetIncomingForm = resetIncomingForm;
         window.editIncoming = editIncoming;
@@ -1013,6 +1051,7 @@
                     </div>`;
                 container.appendChild(tile);
             });
+            applyFocus();
         }
 
         function renderBatchTable() {
@@ -1054,26 +1093,139 @@
         }
 
         function switchViewMode(m) {
-            document.getElementById('view-container-map2').classList.toggle('hidden', m !== 'map2');
-            document.getElementById('view-container-map3').classList.toggle('hidden', m !== 'map3');
-            document.getElementById('view-container-list').classList.toggle('hidden', m !== 'list');
-            document.getElementById('view-container-incoming').classList.toggle('hidden', m !== 'incoming');
-            const off = 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white', on = 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow';
-            document.getElementById('view-btn-incoming').className = m === 'incoming' ? on : off;
-            
-            document.getElementById('view-btn-map2').className = m === 'map2' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white';
-            document.getElementById('view-btn-map3').className = m === 'map3' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white';
-            document.getElementById('view-btn-list').className = m === 'list' ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow border-l border-white/20 pl-4 ml-1' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white border-l border-white/20 pl-4 ml-1';
-            
+            currentView = m;
+            clearSlotFocus();
+            VIEWS.forEach(v => document.getElementById('view-container-' + v).classList.toggle('hidden', m !== v));
+            const on = 'px-3 py-1.5 text-xs font-bold rounded-lg bg-frihet-ivory text-frihet-brown shadow', off = 'px-3 py-1.5 text-xs font-bold rounded-lg text-frihet-ivory hover:text-white';
+            ['overview', 'map2', 'map3', 'incoming'].forEach(v => document.getElementById('view-btn-' + v).className = m === v ? on : off);
+            document.getElementById('view-btn-list').className = (m === 'list' ? on : off) + ' border-l border-white/20 pl-4 ml-1';
             if (m === 'list') renderBatchTable();
             if (m === 'incoming') renderIncoming();
+            updateSummary();
         }
 
+        function statScope() { return currentView === 'map2' ? 'f2' : currentView === 'map3' ? 'f3' : 'all'; }
+        function scopeKeys(sc) {
+            const all = Object.keys(defaultSlots);
+            return sc === 'f2' ? all.filter(k => !k.startsWith('D-')) : sc === 'f3' ? all.filter(k => k.startsWith('D-')) : all;
+        }
+        function scopeStats(sc) {
+            const keys = scopeKeys(sc);
+            const used = keys.filter(k => hasPallet(slots[k])).length;
+            return { total: keys.length, used: used, empty: keys.length - used, rate: keys.length ? Math.round(used / keys.length * 100) : 0 };
+        }
         function updateSummary() {
-            let usedCount = Object.keys(defaultSlots).filter(k => slots[k] && slots[k].status !== 'empty').length;
-            document.getElementById('stat-used').innerText = usedCount;
-            document.getElementById('stat-empty').innerText = 39 - usedCount;
-            document.getElementById('stat-rate').innerText = `${Math.round((usedCount / 39) * 100)}%`;
+            const sc = statScope(), st = scopeStats(sc), name = SCOPE_NAME[sc];
+            document.getElementById('stat-total-label').innerText = sc === 'all' ? '전체 총 보관 용량' : `${name} 보관 용량`;
+            document.getElementById('stat-total').innerText = st.total;
+            document.getElementById('stat-used').innerText = st.used;
+            document.getElementById('stat-used-of').innerText = `/ ${st.total} PL`;
+            document.getElementById('stat-empty').innerText = st.empty;
+            document.getElementById('stat-rate-label').innerText = sc === 'all' ? '통합 보관 가동률' : `${name} 보관 가동률`;
+            document.getElementById('stat-rate').innerText = `${st.rate}%`;
+            const a = scopeStats('f2'), b = scopeStats('f3');
+            const sub = (x, y) => sc === 'all' ? `2공장 ${x} · 3공장 ${y}` : '';
+            document.getElementById('stat-total-sub').innerText = sub(a.total, b.total);
+            document.getElementById('stat-used-sub').innerText = sub(a.used, b.used);
+            document.getElementById('stat-empty-sub').innerText = sub(a.empty, b.empty);
+            document.getElementById('stat-rate-sub').innerText = sc === 'all' ? `2공장 ${a.rate}% · 3공장 ${b.rate}%` : '';
+            renderOverview();
+        }
+
+        // ===== 전체 현황 =====
+        function renderOverview() {
+            const box = document.getElementById('factory-cards');
+            if (!box) return;
+            const FAC = [
+                { sc: 'f2', name: '제 2공장', desc: '안전재고 보관 공간', view: 'map2', icon: 'fa-map' },
+                { sc: 'f3', name: '제 3공장', desc: '피킹/패킹 전용 공간', view: 'map3', icon: 'fa-building' }
+            ];
+            box.innerHTML = FAC.map(f => {
+                const st = scopeStats(f.sc);
+                const bar = st.rate >= 90 ? 'bg-frihet-brick' : st.rate >= 70 ? 'bg-frihet-amber' : 'bg-frihet-olive';
+                return `<div class="bg-white rounded-2xl p-5 border border-frihet-sand shadow-xl">
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div>
+                            <h3 class="text-lg font-extrabold text-frihet-brown"><i class="fa-solid ${f.icon} text-frihet-amber mr-1.5"></i>${f.name}</h3>
+                            <p class="text-[11px] text-gray-500 mt-0.5">${f.desc} · 총 ${st.total} PL</p>
+                        </div>
+                        <button onclick="switchViewMode('${f.view}')" class="shrink-0 px-3 py-1.5 text-[11px] font-bold text-white bg-frihet-brown hover:bg-frihet-brick rounded-lg">배치도 보기 <i class="fa-solid fa-arrow-right ml-0.5"></i></button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                        <div class="bg-frihet-bg rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">보관 용량</p><p class="text-xl font-black text-frihet-brown">${st.total}</p></div>
+                        <button onclick="switchViewMode('${f.view}'); focusSlots('used')" class="stat-click bg-amber-50 rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">적재 중</p><p class="text-xl font-black text-frihet-amber">${st.used}</p></button>
+                        <button onclick="switchViewMode('${f.view}'); focusSlots('empty')" class="stat-click bg-emerald-50 rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">공파렛트</p><p class="text-xl font-black text-frihet-olive">${st.empty}</p></button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden"><div class="h-full ${bar} rounded-full" style="width:${st.rate}%"></div></div>
+                        <span class="text-xs font-black text-frihet-brown w-20 text-right">가동률 ${st.rate}%</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            const list = document.getElementById('empty-list');
+            const plans = Object.values(incoming);
+            list.innerHTML = FAC.map(f => {
+                const keys = scopeKeys(f.sc).filter(k => !hasPallet(slots[k]));
+                const chips = keys.map(k => {
+                    const plan = plans.find(x => x.slot === k);
+                    return `<button onclick="jumpToSlot('${k}')" class="px-3 py-2 rounded-lg border ${plan ? 'incoming-tag border-frihet-amber' : 'bg-emerald-50 border-emerald-200'} text-left hover:shadow transition">
+                        <span class="text-sm font-black text-frihet-brown">${k}</span>
+                        ${plan ? `<span class="block text-[10px] text-frihet-brick font-bold truncate max-w-[140px]">입고 예정: ${esc(plan.item)}</span>` : `<span class="block text-[10px] text-gray-500">${esc((defaultSlots[k] || {}).zone || '')}</span>`}
+                    </button>`;
+                }).join('');
+                return `<div>
+                    <p class="text-sm font-black text-frihet-brown mb-2">${f.name} <span class="text-frihet-olive">빈 칸 ${keys.length}개</span></p>
+                    <div class="flex flex-wrap gap-2">${chips || '<span class="text-xs text-gray-400">빈 칸이 없어요 (가득 참)</span>'}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // ===== 숫자 카드 → 배치도에서 위치 강조 =====
+        function focusKeys() {
+            if (!focusSpec) return [];
+            if (focusSpec.kind === 'single') return [focusSpec.key];
+            return scopeKeys(statScope()).filter(k => focusSpec.kind === 'empty' ? !hasPallet(slots[k]) : hasPallet(slots[k]));
+        }
+        function applyFocus() {
+            document.querySelectorAll('.slot-focus').forEach(el => el.classList.remove('slot-focus'));
+            VIEWS.forEach(v => { const c = document.getElementById('view-container-' + v); if (c) c.classList.remove('focus-mode'); });
+            if (!focusSpec || (currentView !== 'map2' && currentView !== 'map3')) return;
+            document.getElementById('view-container-' + currentView).classList.add('focus-mode');
+            focusKeys().forEach(k => { const c = document.getElementById('card-' + k); if (c) c.classList.add('slot-focus'); });
+        }
+        function clearSlotFocus() {
+            focusSpec = null;
+            applyFocus();
+            const bar = document.getElementById('focus-bar'); if (bar) bar.classList.add('hidden');
+        }
+        function showFocusBar(text) {
+            document.getElementById('focus-text').innerText = text;
+            document.getElementById('focus-bar').classList.remove('hidden');
+        }
+        function focusSlots(kind) {
+            if (currentView !== 'map2' && currentView !== 'map3') {
+                // 전체 현황(또는 작성표·입고예정)에서는 공장별 정리 화면으로 안내
+                if (currentView !== 'overview') switchViewMode('overview');
+                const target = document.getElementById(kind === 'empty' ? 'empty-list-box' : 'factory-cards');
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.classList.remove('box-flash'); void target.offsetWidth; target.classList.add('box-flash');
+                return;
+            }
+            if (focusSpec && focusSpec.kind === kind) { clearSlotFocus(); return; }   // 한 번 더 누르면 해제
+            focusSpec = { kind: kind };
+            applyFocus();
+            const keys = focusKeys();
+            showFocusBar(`${SCOPE_NAME[statScope()]} ${kind === 'empty' ? '빈 칸' : '적재 중인 칸'} ${keys.length}개를 표시하고 있어요`);
+            if (keys.length) document.getElementById('card-' + keys[0]).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function jumpToSlot(k) {
+            switchViewMode(k.startsWith('D-') ? 'map3' : 'map2');
+            focusSpec = { kind: 'single', key: k };
+            applyFocus();
+            showFocusBar(`${k} 위치를 표시하고 있어요`);
+            const c = document.getElementById('card-' + k);
+            if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function setStackHeight(h) {
