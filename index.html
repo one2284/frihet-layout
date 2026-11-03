@@ -233,7 +233,7 @@
             <div class="bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
                 <div>
                     <p id="stat-total-label" class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">전체 총 보관 용량</p>
-                    <p class="text-2xl font-black text-frihet-brown mt-0.5"><span id="stat-total">39</span> <span class="text-xs font-normal text-gray-500">PL</span></p>
+                    <p class="text-2xl font-black text-frihet-brown mt-0.5"><span id="stat-total">26</span> <span id="stat-total-unit" class="text-xs font-normal text-gray-500">PL</span></p>
                     <p id="stat-total-sub" class="text-[10px] text-gray-400 mt-0.5"></p>
                 </div>
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-frihet-ivory text-frihet-brown flex items-center justify-center text-lg font-bold border border-frihet-sand">
@@ -242,7 +242,7 @@
             </div>
             <div onclick="focusSlots('used')" title="눌러서 적재 중인 칸 위치 보기" class="stat-click bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">현재 적재 중 파렛트</p>
+                    <p id="stat-used-label" class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">현재 적재 중 파렛트</p>
                     <p class="text-2xl font-black text-frihet-amber mt-0.5"><span id="stat-used">0</span> <span id="stat-used-of" class="text-xs font-normal text-gray-400">/ 39 PL</span></p>
                     <p id="stat-used-sub" class="text-[10px] text-gray-400 mt-0.5"></p>
                 </div>
@@ -252,8 +252,8 @@
             </div>
             <div onclick="focusSlots('empty')" title="눌러서 빈 칸 위치 보기" class="stat-click bg-white p-4 rounded-xl border border-frihet-sand shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">공파렛트 (잔여 슬롯)</p>
-                    <p class="text-2xl font-black text-frihet-olive mt-0.5"><span id="stat-empty">0</span> <span class="text-xs font-normal text-gray-400">PL</span></p>
+                    <p id="stat-empty-label" class="text-[11px] text-frihet-brick font-bold uppercase tracking-wider">공파렛트 (잔여 슬롯)</p>
+                    <p class="text-2xl font-black text-frihet-olive mt-0.5"><span id="stat-empty">0</span> <span id="stat-empty-unit" class="text-xs font-normal text-gray-400">PL</span></p>
                     <p id="stat-empty-sub" class="text-[10px] text-gray-400 mt-0.5"></p>
                 </div>
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-emerald-50 text-frihet-olive flex items-center justify-center text-lg font-bold border border-emerald-200">
@@ -281,7 +281,7 @@
             <div id="factory-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             <div id="empty-list-box" class="bg-white rounded-2xl p-6 border border-frihet-sand shadow-xl">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-frihet-sand pb-3 mb-4">
-                    <h2 class="text-lg font-extrabold text-frihet-brown flex items-center gap-2"><i class="fa-solid fa-border-none text-frihet-olive"></i> 빈 칸(공파렛트) 위치</h2>
+                    <h2 class="text-lg font-extrabold text-frihet-brown flex items-center gap-2"><i class="fa-solid fa-border-none text-frihet-olive"></i> 2공장 빈 칸(공파렛트) 위치</h2>
                     <p class="text-xs text-gray-500">칸 번호를 누르면 배치도에서 바로 위치를 보여줘요</p>
                 </div>
                 <div id="empty-list" class="space-y-4"></div>
@@ -418,7 +418,7 @@
                     <h2 class="text-xl font-extrabold text-frihet-brown flex items-center gap-2">
                         <i class="fa-solid fa-building text-frihet-amber"></i> 제 3공장 · 피킹/패킹 전용 공간 (총 13 PL)
                     </h2>
-                    <p class="text-xs text-gray-500 mt-1">* 3공장 : 실제 출고를 위한 <span class="text-blue-600 font-bold">피킹 및 패킹 작업 공간</span> <span class="text-red-500 font-bold">(최대 1단 적재만 가능)</span> · 칸을 눌러 작업 단계와 출고처를 적어두세요</p>
+                    <p class="text-xs text-gray-500 mt-1">* 3공장 : 실제 출고를 위한 <span class="text-blue-600 font-bold">피킹 및 패킹 작업 공간</span> <span class="text-red-500 font-bold">(최대 1단 적재만 가능)</span> · <b class="text-frihet-brown">고정 피킹 위치</b>라 수량은 2공장에서 관리해요. 2공장 파렛트를 끌어다 놓으면 [보충]으로 기록돼요</p>
                 </div>
                 <div id="work-summary" class="flex flex-wrap gap-2"></div>
             </div>
@@ -524,7 +524,7 @@
                             <th class="p-3 w-24">수량</th>
                             <th class="p-3 w-20">단위</th>
                             <th class="p-3 w-28">입고일</th>
-                            <th class="p-3 w-28">작업 단계 (3공장)</th>
+                            <th class="p-3 w-32">최근 보충 (3공장)</th>
                             <th class="p-3 w-44">비고</th>
                             <th class="p-3 text-center w-20">관리</th>
                         </tr>
@@ -593,6 +593,15 @@
         <option value="병"></option><option value="캔"></option><option value="묶음"></option><option value="EA"></option>
     </datalist>
 
+    <div id="move-choice-modal" class="fixed inset-0 bg-frihet-brown/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden no-print p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-frihet-sand text-frihet-darkText">
+            <h3 class="text-base font-black text-frihet-brown mb-1"><i class="fa-solid fa-boxes-packing mr-1 text-blue-600"></i><span id="move-choice-title">3공장 피킹 위치로 옮기기</span></h3>
+            <p id="move-choice-desc" class="text-xs text-gray-500 mb-4 leading-relaxed"></p>
+            <div id="move-choice-buttons" class="space-y-2"></div>
+            <button type="button" onclick="closeMoveChoice()" class="w-full mt-3 py-2.5 text-xs font-bold text-gray-500 bg-frihet-bg rounded-lg">취소</button>
+        </div>
+    </div>
+
     <div id="receive-modal" class="fixed inset-0 bg-frihet-brown/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden no-print p-4">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-frihet-sand text-frihet-darkText">
             <h3 class="text-base font-black text-frihet-brown mb-1"><i class="fa-solid fa-dolly mr-1 text-frihet-amber"></i>입고 완료 처리</h3>
@@ -632,7 +641,7 @@
 
             <form id="pallet-form" onsubmit="savePalletDetail(event)" class="space-y-4">
                 <input type="hidden" id="modal-slot-key">
-                <div>
+                <div id="modal-stack-section">
                     <label id="modal-stack-label" class="block text-xs font-bold text-frihet-brown mb-1.5">박스 적재 단수 (최대 2단)</label>
                     <div id="stack-btn-group" class="grid grid-cols-3 gap-2">
                         <button type="button" onclick="setStackHeight('0')" id="stack-btn-0" class="py-2 text-xs font-bold rounded-lg border border-frihet-sand bg-frihet-bg">공파렛트</button>
@@ -653,21 +662,19 @@
                     </select>
                 </div>
                 <div><label class="block text-xs font-bold text-frihet-brown mb-1">품목명</label><input type="text" id="modal-item-name" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
-                <div class="grid grid-cols-3 gap-3">
+                <div id="modal-qty-section" class="grid grid-cols-3 gap-3">
                     <div><label class="block text-xs font-bold text-frihet-brown mb-1">수량</label><input type="text" id="modal-qty" inputmode="decimal" placeholder="예: 36" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-xs font-bold text-frihet-brown mb-1">단위</label><input type="text" id="modal-unit" list="unit-options" placeholder="박스" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-xs font-bold text-frihet-brown mb-1">입고일</label><input type="text" id="modal-date" placeholder="예: 10.21" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                 </div>
-                <div id="modal-work-section" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-2">
-                    <p class="text-[11px] font-black text-blue-700"><i class="fa-solid fa-boxes-packing mr-1"></i>3공장 피킹/패킹 작업 정보</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">작업 단계</label>
-                            <select id="modal-work" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none">
-                                <option value="">미지정</option><option value="picking">피킹 대기</option><option value="packing">패킹 중</option><option value="ready">출고 대기</option>
-                            </select></div>
-                        <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">출고처</label><input type="text" id="modal-dest" placeholder="예: 강남점" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none"></div>
-                        <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">출고 예정일</label><input type="text" id="modal-ship" placeholder="예: 10.25" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                <div id="modal-refill-section" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <p class="text-[11px] font-black text-blue-700 mb-2"><i class="fa-solid fa-boxes-packing mr-1"></i>3공장 고정 피킹 위치</p>
+                    <label class="block text-[11px] font-bold text-frihet-brown mb-1">최근 보충일</label>
+                    <div class="flex gap-2">
+                        <input type="date" id="modal-refill" class="flex-1 min-w-0 text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none">
+                        <button type="button" onclick="document.getElementById('modal-refill').value = todayISO()" class="admin-only shrink-0 px-3 py-2 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg">오늘 보충</button>
                     </div>
+                    <p class="text-[10px] text-gray-500 mt-1.5">수량은 기록하지 않아요. 2공장 파렛트를 이 칸으로 옮겨 [보충]을 고르면 날짜가 자동으로 남아요.</p>
                 </div>
                 <div><label class="block text-xs font-bold text-frihet-brown mb-1">비고</label><textarea id="modal-note" rows="2" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></textarea></div>
                 <div class="flex items-center justify-end gap-2 pt-3 border-t border-frihet-sand">
@@ -778,6 +785,9 @@
         window.focusSlots = focusSlots;
         window.clearSlotFocus = clearSlotFocus;
         window.jumpToSlot = jumpToSlot;
+        window.todayISO = todayISO;
+        window.closeMoveChoice = closeMoveChoice;
+        window.chooseMove = chooseMove;
         window.submitIncoming = submitIncoming;
         window.resetIncomingForm = resetIncomingForm;
         window.editIncoming = editIncoming;
@@ -796,6 +806,11 @@
         const WORK_STYLE = { picking: 'bg-sky-500', packing: 'bg-violet-600', ready: 'bg-emerald-600' };
         function fmtQty(it) { const q = (it.qty == null ? '' : String(it.qty)).trim(); if (!q) return ''; return it.unit ? `${q} ${it.unit}` : q; }
         function pad2(n) { return String(n).padStart(2, '0'); }
+        function todayISO() { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+        function daysAgoISO(n) { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+        // 3공장(고정 피킹 위치)은 '품목이 지정됐는지'로 판단
+        function isAssigned(it) { return !!it && it.status !== 'empty' && !!String(it.item || '').trim(); }
+        function isFilled(k) { return k.startsWith('D-') ? isAssigned(slots[k]) : hasPallet(slots[k]); }
         function todayMD() { const d = new Date(); return `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`; }
         function mdFromISO(iso) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[2]}.${m[3]}` : (iso || ''); }
         // 예전 데이터("36 Box", "1,600kg")를 수량과 단위로 나눔
@@ -899,7 +914,7 @@
             else showLogin();
             setInterval(() => {
                 const modalOpen = !document.getElementById('pallet-modal').classList.contains('hidden');
-                if (!isAdmin || dirty || dragKey || modalOpen || changedKeys.size || changedIncoming.size || !document.getElementById('receive-modal').classList.contains('hidden') || document.getElementById('inc-id').value) return;   // 편집 중엔 덮어쓰지 않음
+                if (!isAdmin || dirty || dragKey || modalOpen || changedKeys.size || changedIncoming.size || !document.getElementById('receive-modal').classList.contains('hidden') || !document.getElementById('move-choice-modal').classList.contains('hidden') || document.getElementById('inc-id').value) return;   // 편집 중엔 덮어쓰지 않음
                 loadFromServer(true);
             }, POLL_MS);
             window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -1022,7 +1037,32 @@
 
                 const hasItem = item.status !== 'empty' && item.item;
                 const is3F = key.startsWith('D-');
-                if (is3F && hasItem && WORK_LABEL[item.work]) statusBadge = `<span class="text-[9px] ${WORK_STYLE[item.work]} text-white font-black px-1.5 py-0.5 rounded">${WORK_LABEL[item.work]}</span>`;
+                if (is3F) {
+                    const assigned = isAssigned(item);
+                    const fixedBadge3 = item.isFixed ? `<div class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md z-30" title="고정석"><i class="fa-solid fa-lock text-[10px]"></i></div>` : '';
+                    const refill = item.lastRefill
+                        ? `<span class="${item.lastRefill === todayISO() ? 'text-blue-600 font-black' : ''}"><i class="fa-solid fa-rotate mr-0.5"></i>보충 ${esc(mdFromISO(item.lastRefill))}${item.lastRefill === todayISO() ? ' (오늘)' : ''}</span>`
+                        : '<span class="text-gray-400">보충 기록 없음</span>';
+                    const tile3 = document.createElement('div');
+                    tile3.className = `pallet-square ${assigned ? styleClass : 'square-empty'} p-2.5 rounded-xl cursor-pointer flex flex-col justify-between w-full relative`;
+                    tile3.id = `card-${key}`;
+                    tile3.onclick = () => openModal(key);
+                    if (isAdmin) attachDrag(tile3, key, false);   // 3공장은 고정 위치라 끌어서 옮기지 않고, 2공장 파렛트를 놓기만 함
+                    tile3.innerHTML = `
+                        ${fixedBadge3}
+                        <div class="flex items-center justify-between border-b border-frihet-sand/50 pb-1">
+                            <span class="text-[11px] font-black text-white bg-frihet-brown px-2 py-0.5 rounded">${key}</span>${assigned ? statusBadge : '<span class="text-[9px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded font-bold">미지정</span>'}
+                        </div>
+                        <div class="my-1.5 min-w-0">
+                            <p class="text-[13px] font-black ${assigned ? 'text-frihet-brown' : 'text-gray-400 font-normal'} leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${assigned ? esc(item.item) : '품목 미지정'}</p>
+                        </div>
+                        <div class="flex items-center justify-between gap-1 text-[10px] text-gray-500 pt-1 border-t border-frihet-sand/30 mt-auto">
+                            <span class="truncate">${assigned ? refill : '-'}</span>
+                            <span class="shrink-0 text-[9px] bg-blue-50 text-blue-700 border border-blue-200 font-black px-1.5 rounded">피킹</span>
+                        </div>`;
+                    container.appendChild(tile3);
+                    return;
+                }
                 const plan = !hasPallet(item) ? Object.values(incoming).filter(x => x.slot === key).sort((a, b) => (a.date || '').localeCompare(b.date || ''))[0] : null;
                 let infoLine = '';
                 if (hasItem && is3F && (item.dest || item.shipDate)) infoLine = `<i class="fa-solid fa-truck-fast mr-0.5"></i>${esc(item.dest || '')}${item.dest && item.shipDate ? ' · ' : ''}${item.shipDate ? esc(item.shipDate) + ' 출고' : ''}`;
@@ -1062,6 +1102,8 @@
             Object.keys(defaultSlots).forEach(key => {
                 const item = slots[key] || { status: 'empty', stack: 0, item: '', qty: '', date: '', note: '', isFixed: false };
                 const fixedIcon = item.isFixed ? '<i class="fa-solid fa-lock text-red-500 text-[10px] ml-1" title="고정석"></i>' : '';
+                const P3 = key.startsWith('D-');
+                const dash = '<span class="text-gray-300">-</span>';
                 const stackOptions = key.startsWith('D-') 
                     ? `<option value="0" ${item.stack == 0 ? 'selected' : ''}>0단</option><option value="1" ${item.stack == 1 ? 'selected' : ''}>1단</option>` 
                     : `<option value="0" ${item.stack == 0 ? 'selected' : ''}>0단</option><option value="1" ${item.stack == 1 ? 'selected' : ''}>1단</option><option value="2" ${item.stack == 2 ? 'selected' : ''}>2단</option>`;
@@ -1070,13 +1112,13 @@
                 tr.innerHTML = `
                     <td class="p-2.5 text-center font-bold text-frihet-brown">${key} ${fixedIcon}</td>
                     <td class="p-2.5 text-gray-500">${item.zone || '물류센터'}</td>
-                    <td class="p-2"><select onchange="updateBatchField('${key}', 'status', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"><option value="empty" ${item.status === 'empty' ? 'selected' : ''}>공파렛트</option><option value="powder" ${item.status === 'powder' ? 'selected' : ''}>파우더류</option><option value="dessert" ${item.status === 'dessert' ? 'selected' : ''}>디저트류</option><option value="liquid" ${item.status === 'liquid' ? 'selected' : ''}>액상/시럽</option><option value="sub" ${item.status === 'sub' ? 'selected' : ''}>부자재</option><option value="etc" ${item.status === 'etc' ? 'selected' : ''}>기타</option></select></td>
+                    <td class="p-2"><select onchange="updateBatchField('${key}', 'status', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"><option value="empty" ${item.status === 'empty' ? 'selected' : ''}>${P3 ? '미지정' : '공파렛트'}</option><option value="powder" ${item.status === 'powder' ? 'selected' : ''}>파우더류</option><option value="dessert" ${item.status === 'dessert' ? 'selected' : ''}>디저트류</option><option value="liquid" ${item.status === 'liquid' ? 'selected' : ''}>액상/시럽</option><option value="sub" ${item.status === 'sub' ? 'selected' : ''}>부자재</option><option value="etc" ${item.status === 'etc' ? 'selected' : ''}>기타</option></select></td>
                     <td class="p-2"><input type="text" value="${esc(item.item)}" onchange="updateBatchField('${key}', 'item', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
-                    <td class="p-2"><select onchange="updateBatchField('${key}', 'stack', parseInt(this.value))" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded">${stackOptions}</select></td>
-                    <td class="p-2"><input type="text" inputmode="decimal" value="${esc(item.qty)}" onchange="updateBatchField('${key}', 'qty', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
-                    <td class="p-2"><input type="text" list="unit-options" value="${esc(item.unit)}" onchange="updateBatchField('${key}', 'unit', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
-                    <td class="p-2"><input type="text" value="${esc(item.date)}" placeholder="예: 10.21" onchange="updateBatchField('${key}', 'date', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
-                    <td class="p-2">${key.startsWith('D-') ? `<select onchange="updateBatchField('${key}', 'work', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"><option value="">미지정</option>${Object.entries(WORK_LABEL).map(([v, l]) => `<option value="${v}" ${item.work === v ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '<span class="text-gray-300">-</span>'}</td>
+                    <td class="p-2">${P3 ? dash : `<select onchange="updateBatchField('${key}', 'stack', parseInt(this.value))" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded">${stackOptions}</select>`}</td>
+                    <td class="p-2">${P3 ? dash : `<input type="text" inputmode="decimal" value="${esc(item.qty)}" onchange="updateBatchField('${key}', 'qty', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded">`}</td>
+                    <td class="p-2">${P3 ? dash : `<input type="text" list="unit-options" value="${esc(item.unit)}" onchange="updateBatchField('${key}', 'unit', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded">`}</td>
+                    <td class="p-2">${P3 ? dash : `<input type="text" value="${esc(item.date)}" placeholder="예: 10.21" onchange="updateBatchField('${key}', 'date', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded">`}</td>
+                    <td class="p-2">${P3 ? `<input type="date" value="${esc(item.lastRefill)}" onchange="updateBatchField('${key}', 'lastRefill', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded">` : dash}</td>
                     <td class="p-2"><input type="text" value="${esc(item.note)}" onchange="updateBatchField('${key}', 'note', this.value)" ${DIS} class="w-full text-xs p-1.5 border border-frihet-sand rounded"></td>
                     <td class="p-2 text-center"><button onclick="openModal('${key}')" class="px-2 py-1 bg-frihet-brown text-white text-[10px] rounded hover:bg-frihet-brick font-bold">${isAdmin ? '상세' : '보기'}</button></td>
                 `;
@@ -1107,28 +1149,29 @@
         function statScope() { return currentView === 'map2' ? 'f2' : currentView === 'map3' ? 'f3' : 'all'; }
         function scopeKeys(sc) {
             const all = Object.keys(defaultSlots);
-            return sc === 'f2' ? all.filter(k => !k.startsWith('D-')) : sc === 'f3' ? all.filter(k => k.startsWith('D-')) : all;
+            return sc === 'f3' ? all.filter(k => k.startsWith('D-')) : all.filter(k => !k.startsWith('D-'));   // 전체 = 보관 공간(2공장) 기준
         }
         function scopeStats(sc) {
             const keys = scopeKeys(sc);
-            const used = keys.filter(k => hasPallet(slots[k])).length;
+            const used = keys.filter(k => isFilled(k)).length;
             return { total: keys.length, used: used, empty: keys.length - used, rate: keys.length ? Math.round(used / keys.length * 100) : 0 };
         }
         function updateSummary() {
             const sc = statScope(), st = scopeStats(sc), name = SCOPE_NAME[sc];
-            document.getElementById('stat-total-label').innerText = sc === 'all' ? '전체 총 보관 용량' : `${name} 보관 용량`;
-            document.getElementById('stat-total').innerText = st.total;
-            document.getElementById('stat-used').innerText = st.used;
-            document.getElementById('stat-used-of').innerText = `/ ${st.total} PL`;
-            document.getElementById('stat-empty').innerText = st.empty;
-            document.getElementById('stat-rate-label').innerText = sc === 'all' ? '통합 보관 가동률' : `${name} 보관 가동률`;
-            document.getElementById('stat-rate').innerText = `${st.rate}%`;
-            const a = scopeStats('f2'), b = scopeStats('f3');
-            const sub = (x, y) => sc === 'all' ? `2공장 ${x} · 3공장 ${y}` : '';
-            document.getElementById('stat-total-sub').innerText = sub(a.total, b.total);
-            document.getElementById('stat-used-sub').innerText = sub(a.used, b.used);
-            document.getElementById('stat-empty-sub').innerText = sub(a.empty, b.empty);
-            document.getElementById('stat-rate-sub').innerText = sc === 'all' ? `2공장 ${a.rate}% · 3공장 ${b.rate}%` : '';
+            const set = (id, v) => { document.getElementById(id).innerText = v; };
+            if (sc === 'f3') {
+                const p = pickStats();
+                set('stat-total-label', '제 3공장 피킹 위치'); set('stat-total', p.total); set('stat-total-unit', '곳'); set('stat-total-sub', '고정 위치 · 수량은 2공장에서 관리');
+                set('stat-used-label', '품목 지정된 위치'); set('stat-used', p.assigned); set('stat-used-of', `/ ${p.total} 곳`); set('stat-used-sub', '');
+                set('stat-empty-label', '품목 미지정 위치'); set('stat-empty', p.none); set('stat-empty-unit', '곳'); set('stat-empty-sub', '');
+                set('stat-rate-label', '오늘 보충한 위치'); set('stat-rate', `${p.today}곳`); set('stat-rate-sub', `최근 7일 ${p.week}곳`);
+            } else {
+                set('stat-total-label', sc === 'all' ? '총 보관 용량 (2공장)' : `${name} 보관 용량`); set('stat-total', st.total); set('stat-total-unit', 'PL');
+                set('stat-total-sub', sc === 'all' ? '3공장 피킹 위치 13곳은 별도' : '');
+                set('stat-used-label', '현재 적재 중 파렛트'); set('stat-used', st.used); set('stat-used-of', `/ ${st.total} PL`); set('stat-used-sub', '');
+                set('stat-empty-label', '공파렛트 (잔여 슬롯)'); set('stat-empty', st.empty); set('stat-empty-unit', 'PL'); set('stat-empty-sub', '');
+                set('stat-rate-label', sc === 'all' ? '보관 가동률 (2공장)' : `${name} 보관 가동률`); set('stat-rate', `${st.rate}%`); set('stat-rate-sub', '');
+            }
             renderOverview();
         }
 
@@ -1136,56 +1179,69 @@
         function renderOverview() {
             const box = document.getElementById('factory-cards');
             if (!box) return;
-            const FAC = [
-                { sc: 'f2', name: '제 2공장', desc: '안전재고 보관 공간', view: 'map2', icon: 'fa-map' },
-                { sc: 'f3', name: '제 3공장', desc: '피킹/패킹 전용 공간', view: 'map3', icon: 'fa-building' }
-            ];
-            box.innerHTML = FAC.map(f => {
-                const st = scopeStats(f.sc);
-                const bar = st.rate >= 90 ? 'bg-frihet-brick' : st.rate >= 70 ? 'bg-frihet-amber' : 'bg-frihet-olive';
-                return `<div class="bg-white rounded-2xl p-5 border border-frihet-sand shadow-xl">
+            const st = scopeStats('f2'), p = pickStats();
+            const bar = st.rate >= 90 ? 'bg-frihet-brick' : st.rate >= 70 ? 'bg-frihet-amber' : 'bg-frihet-olive';
+            const pickRate = p.total ? Math.round(p.assigned / p.total * 100) : 0;
+            box.innerHTML = `<div class="bg-white rounded-2xl p-5 border border-frihet-sand shadow-xl">
                     <div class="flex items-start justify-between gap-3 mb-4">
                         <div>
-                            <h3 class="text-lg font-extrabold text-frihet-brown"><i class="fa-solid ${f.icon} text-frihet-amber mr-1.5"></i>${f.name}</h3>
-                            <p class="text-[11px] text-gray-500 mt-0.5">${f.desc} · 총 ${st.total} PL</p>
+                            <h3 class="text-lg font-extrabold text-frihet-brown"><i class="fa-solid fa-map text-frihet-amber mr-1.5"></i>제 2공장</h3>
+                            <p class="text-[11px] text-gray-500 mt-0.5">안전재고 보관 공간 · 총 ${st.total} PL</p>
                         </div>
-                        <button onclick="switchViewMode('${f.view}')" class="shrink-0 px-3 py-1.5 text-[11px] font-bold text-white bg-frihet-brown hover:bg-frihet-brick rounded-lg">배치도 보기 <i class="fa-solid fa-arrow-right ml-0.5"></i></button>
+                        <button onclick="switchViewMode('map2')" class="shrink-0 px-3 py-1.5 text-[11px] font-bold text-white bg-frihet-brown hover:bg-frihet-brick rounded-lg">배치도 보기 <i class="fa-solid fa-arrow-right ml-0.5"></i></button>
                     </div>
                     <div class="grid grid-cols-3 gap-2 text-center mb-3">
                         <div class="bg-frihet-bg rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">보관 용량</p><p class="text-xl font-black text-frihet-brown">${st.total}</p></div>
-                        <button onclick="switchViewMode('${f.view}'); focusSlots('used')" class="stat-click bg-amber-50 rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">적재 중</p><p class="text-xl font-black text-frihet-amber">${st.used}</p></button>
-                        <button onclick="switchViewMode('${f.view}'); focusSlots('empty')" class="stat-click bg-emerald-50 rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">공파렛트</p><p class="text-xl font-black text-frihet-olive">${st.empty}</p></button>
+                        <button onclick="switchViewMode('map2'); focusSlots('used')" class="stat-click bg-amber-50 rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">적재 중</p><p class="text-xl font-black text-frihet-amber">${st.used}</p></button>
+                        <button onclick="switchViewMode('map2'); focusSlots('empty')" class="stat-click bg-emerald-50 rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">공파렛트</p><p class="text-xl font-black text-frihet-olive">${st.empty}</p></button>
                     </div>
                     <div class="flex items-center gap-2">
                         <div class="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden"><div class="h-full ${bar} rounded-full" style="width:${st.rate}%"></div></div>
                         <span class="text-xs font-black text-frihet-brown w-20 text-right">가동률 ${st.rate}%</span>
                     </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-frihet-sand shadow-xl">
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div>
+                            <h3 class="text-lg font-extrabold text-frihet-brown"><i class="fa-solid fa-building text-blue-600 mr-1.5"></i>제 3공장</h3>
+                            <p class="text-[11px] text-gray-500 mt-0.5">피킹/패킹 전용 · 고정 피킹 위치 ${p.total}곳</p>
+                        </div>
+                        <button onclick="switchViewMode('map3')" class="shrink-0 px-3 py-1.5 text-[11px] font-bold text-white bg-frihet-brown hover:bg-frihet-brick rounded-lg">배치도 보기 <i class="fa-solid fa-arrow-right ml-0.5"></i></button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                        <button onclick="switchViewMode('map3'); focusSlots('used')" class="stat-click bg-frihet-bg rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">품목 지정</p><p class="text-xl font-black text-frihet-brown">${p.assigned}</p></button>
+                        <div class="bg-blue-50 rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">오늘 보충</p><p class="text-xl font-black text-blue-600">${p.today}</p></div>
+                        <div class="bg-blue-50/60 rounded-xl py-2.5"><p class="text-[10px] text-gray-500 font-bold">최근 7일 보충</p><p class="text-xl font-black text-blue-700">${p.week}</p></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden"><div class="h-full bg-blue-600 rounded-full" style="width:${pickRate}%"></div></div>
+                        <span class="text-xs font-black text-frihet-brown w-20 text-right">지정 ${p.assigned}/${p.total}</span>
+                    </div>
                 </div>`;
-            }).join('');
 
             const list = document.getElementById('empty-list');
             const plans = Object.values(incoming);
-            list.innerHTML = FAC.map(f => {
-                const keys = scopeKeys(f.sc).filter(k => !hasPallet(slots[k]));
-                const chips = keys.map(k => {
-                    const plan = plans.find(x => x.slot === k);
-                    return `<button onclick="jumpToSlot('${k}')" class="px-3 py-2 rounded-lg border ${plan ? 'incoming-tag border-frihet-amber' : 'bg-emerald-50 border-emerald-200'} text-left hover:shadow transition">
-                        <span class="text-sm font-black text-frihet-brown">${k}</span>
-                        ${plan ? `<span class="block text-[10px] text-frihet-brick font-bold truncate max-w-[140px]">입고 예정: ${esc(plan.item)}</span>` : `<span class="block text-[10px] text-gray-500">${esc((defaultSlots[k] || {}).zone || '')}</span>`}
-                    </button>`;
-                }).join('');
-                return `<div>
-                    <p class="text-sm font-black text-frihet-brown mb-2">${f.name} <span class="text-frihet-olive">빈 칸 ${keys.length}개</span></p>
-                    <div class="flex flex-wrap gap-2">${chips || '<span class="text-xs text-gray-400">빈 칸이 없어요 (가득 참)</span>'}</div>
-                </div>`;
-            }).join('');
+            const emp2 = scopeKeys('f2').filter(k => !hasPallet(slots[k]));
+            const none3 = scopeKeys('f3').filter(k => !isAssigned(slots[k]));
+            const chip = (k, sub, cls) => `<button onclick="jumpToSlot('${k}')" class="px-3 py-2 rounded-lg border ${cls} text-left hover:shadow transition"><span class="text-sm font-black text-frihet-brown">${k}</span>${sub}</button>`;
+            list.innerHTML = `<div>
+                    <p class="text-sm font-black text-frihet-brown mb-2">제 2공장 <span class="text-frihet-olive">빈 칸 ${emp2.length}개</span></p>
+                    <div class="flex flex-wrap gap-2">${emp2.map(k => {
+                        const plan = plans.find(x => x.slot === k);
+                        return chip(k, plan ? `<span class="block text-[10px] text-frihet-brick font-bold truncate max-w-[140px]">입고 예정: ${esc(plan.item)}</span>` : `<span class="block text-[10px] text-gray-500">${esc((defaultSlots[k] || {}).zone || '')}</span>`, plan ? 'incoming-tag border-frihet-amber' : 'bg-emerald-50 border-emerald-200');
+                    }).join('') || '<span class="text-xs text-gray-400">빈 칸이 없어요 (가득 참)</span>'}</div>
+                </div>
+                ${none3.length ? `<div>
+                    <p class="text-sm font-black text-frihet-brown mb-2">제 3공장 <span class="text-gray-500">품목 미지정 피킹 위치 ${none3.length}곳</span></p>
+                    <div class="flex flex-wrap gap-2">${none3.map(k => chip(k, '<span class="block text-[10px] text-gray-500">품목 지정 필요</span>', 'bg-gray-50 border-gray-200')).join('')}</div>
+                </div>` : ''}`;
         }
 
         // ===== 숫자 카드 → 배치도에서 위치 강조 =====
         function focusKeys() {
             if (!focusSpec) return [];
             if (focusSpec.kind === 'single') return [focusSpec.key];
-            return scopeKeys(statScope()).filter(k => focusSpec.kind === 'empty' ? !hasPallet(slots[k]) : hasPallet(slots[k]));
+            return scopeKeys(statScope()).filter(k => focusSpec.kind === 'empty' ? !isFilled(k) : isFilled(k));
         }
         function applyFocus() {
             document.querySelectorAll('.slot-focus').forEach(el => el.classList.remove('slot-focus'));
@@ -1216,7 +1272,8 @@
             focusSpec = { kind: kind };
             applyFocus();
             const keys = focusKeys();
-            showFocusBar(`${SCOPE_NAME[statScope()]} ${kind === 'empty' ? '빈 칸' : '적재 중인 칸'} ${keys.length}개를 표시하고 있어요`);
+            const f3 = statScope() === 'f3';
+            showFocusBar(`${SCOPE_NAME[statScope()]} ${kind === 'empty' ? (f3 ? '품목 미지정 위치' : '빈 칸') : (f3 ? '품목 지정된 위치' : '적재 중인 칸')} ${keys.length}개를 표시하고 있어요`);
             if (keys.length) document.getElementById('card-' + keys[0]).scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         function jumpToSlot(k) {
@@ -1244,10 +1301,12 @@
             document.getElementById('modal-status').value = item.status || 'empty'; document.getElementById('modal-item-name').value = item.item || '';
             document.getElementById('modal-qty').value = item.qty || ''; document.getElementById('modal-date').value = item.date || ''; document.getElementById('modal-note').value = item.note || '';
             document.getElementById('modal-unit').value = item.unit || (item.status === 'empty' ? '박스' : '');
-            document.getElementById('modal-work-section').classList.toggle('hidden', !k.startsWith('D-'));
-            document.getElementById('modal-work').value = item.work || '';
-            document.getElementById('modal-dest').value = item.dest || '';
-            document.getElementById('modal-ship').value = item.shipDate || '';
+            const pick3 = k.startsWith('D-');
+            document.getElementById('modal-refill-section').classList.toggle('hidden', !pick3);
+            document.getElementById('modal-stack-section').classList.toggle('hidden', pick3);
+            document.getElementById('modal-qty-section').classList.toggle('hidden', pick3);
+            document.getElementById('modal-refill').value = item.lastRefill || '';
+            document.querySelector('#modal-status option[value="empty"]').innerText = pick3 ? '품목 미지정' : '공파렛트 (Empty)';
             document.getElementById('modal-is-fixed').checked = item.isFixed === true;
             
             const is3F = k.startsWith('D-');
@@ -1261,32 +1320,40 @@
             
             const form = document.getElementById('pallet-modal');
             form.querySelectorAll('input:not([type=hidden]), select, textarea, #stack-btn-group button').forEach(el => { el.disabled = !isAdmin; });
-            document.getElementById('modal-title').innerText = isAdmin ? '파렛트 정보 수정' : '파렛트 정보';
+            document.getElementById('modal-title').innerText = k.startsWith('D-') ? (isAdmin ? '피킹 위치 수정' : '피킹 위치 정보') : (isAdmin ? '파렛트 정보 수정' : '파렛트 정보');
             fillMoveTargets(k);
             document.getElementById('pallet-modal').classList.remove('hidden');
         }
 
         // ===== 3공장 피킹/패킹 현황 =====
+        function pickStats() {
+            const keys = Object.keys(defaultSlots).filter(k => k.startsWith('D-'));
+            const today = todayISO(), week = daysAgoISO(6);
+            const assigned = keys.filter(k => isAssigned(slots[k]));
+            return {
+                total: keys.length, assigned: assigned.length, none: keys.length - assigned.length,
+                today: assigned.filter(k => slots[k].lastRefill === today).length,
+                week: assigned.filter(k => (slots[k].lastRefill || '') >= week).length
+            };
+        }
         function renderWorkSummary() {
             const box = document.getElementById('work-summary');
             if (!box) return;
-            const keys = Object.keys(defaultSlots).filter(k => k.startsWith('D-'));
-            const cnt = { picking: 0, packing: 0, ready: 0, none: 0, empty: 0 };
-            keys.forEach(k => { const it = slots[k]; if (!hasPallet(it)) cnt.empty++; else if (WORK_LABEL[it.work]) cnt[it.work]++; else cnt.none++; });
-            const chip = (cls, label, n) => `<span class="text-[11px] font-black text-white ${cls} px-2.5 py-1 rounded-full">${label} ${n}</span>`;
-            box.innerHTML = chip('bg-sky-500', '피킹 대기', cnt.picking) + chip('bg-violet-600', '패킹 중', cnt.packing) + chip('bg-emerald-600', '출고 대기', cnt.ready)
-                + (cnt.none ? chip('bg-slate-400', '단계 미지정', cnt.none) : '') + `<span class="text-[11px] font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">빈 칸 ${cnt.empty}</span>`;
+            const p = pickStats();
+            const chip = (cls, label, n) => `<span class="text-[11px] font-black ${cls} px-2.5 py-1 rounded-full">${label} ${n}</span>`;
+            box.innerHTML = chip('bg-frihet-brown text-white', '품목 지정', p.assigned)
+                + (p.none ? chip('bg-gray-200 text-gray-600', '미지정', p.none) : '')
+                + chip('bg-blue-600 text-white', '오늘 보충', p.today)
+                + chip('bg-blue-50 text-blue-700 border border-blue-200', '최근 7일 보충', p.week);
         }
 
         // ===== 입고 예정 =====
         function newId() { return 'in-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
         function emptySlotOptions(selected, allowNone) {
-            const keys = Object.keys(defaultSlots).filter(k => !hasPallet(slots[k]));
-            const f2 = keys.filter(k => !k.startsWith('D-')), f3 = keys.filter(k => k.startsWith('D-'));
+            const keys = Object.keys(defaultSlots).filter(k => !k.startsWith('D-') && !hasPallet(slots[k]));   // 3공장은 고정 피킹 위치라 제외
             const opt = k => `<option value="${k}" ${k === selected ? 'selected' : ''}>${k}</option>`;
             return (allowNone ? `<option value="">${allowNone}</option>` : '')
-                + (f2.length ? `<optgroup label="제 2공장 빈 칸">${f2.map(opt).join('')}</optgroup>` : '')
-                + (f3.length ? `<optgroup label="제 3공장 빈 칸">${f3.map(opt).join('')}</optgroup>` : '');
+                + (keys.length ? `<optgroup label="제 2공장 빈 칸">${keys.map(opt).join('')}</optgroup>` : '');
         }
 
         function renderIncoming() {
@@ -1427,7 +1494,9 @@
         function movePallet(from, to) {
             if (!isAdmin || !from || !to || from === to) return false;
             const a = slots[from], b = slots[to];
+            if (from.startsWith('D-')) { showToast('3공장은 고정 피킹 위치라 옮기지 않아요. 칸을 눌러 품목을 바꿔주세요.'); return false; }
             if (!hasPallet(a)) { showToast(`${from}에는 옮길 파렛트가 없어요.`); return false; }
+            if (to.startsWith('D-')) { openMoveChoice(from, to); return true; }
             const swap = hasPallet(b);
             const ca = pickContent(a);
             const cb = swap ? pickContent(b) : emptyContent();
@@ -1449,19 +1518,66 @@
             return true;
         }
 
+        // ===== 2공장 → 3공장 피킹 위치로 옮기기 (매번 고르기) =====
+        let moveCtx = null;
+        function sameItem(x, y) { return String(x || '').replace(/\s/g, '') === String(y || '').replace(/\s/g, ''); }
+        function openMoveChoice(from, to) {
+            const a = slots[from], b = slots[to];
+            moveCtx = { from, to };
+            const btn = (mode, title, desc, cls) => `<button type="button" onclick="chooseMove('${mode}')" class="w-full text-left px-4 py-3 rounded-xl border ${cls} hover:shadow transition">
+                <span class="block text-sm font-black">${title}</span><span class="block text-[11px] opacity-80 mt-0.5">${desc}</span></button>`;
+            const A = esc(a.item), B = esc(b.item);
+            let html = '';
+            if (!isAssigned(b)) {
+                document.getElementById('move-choice-desc').innerHTML = `<b>${to}</b>는 품목이 지정되지 않은 피킹 위치예요.<br>2공장 <b>${from}</b>의 [${A}]을(를) 이 위치에 놓을까요?`;
+                html = btn('assign', `${to}에 [${A}] 지정 + 보충`, `${from} 칸은 비우고, 오늘 보충으로 기록해요`, 'border-blue-300 bg-blue-50 text-blue-800');
+            } else {
+                const same = sameItem(a.item, b.item);
+                document.getElementById('move-choice-desc').innerHTML = `2공장 <b>${from}</b> [${A}] → 3공장 <b>${to}</b> [${B}]` + (same ? '' : `<br><span class="text-red-500 font-bold">※ 두 품목이 달라요</span>`);
+                html = btn('refill', '보충', `${to}의 [${B}]은(는) 그대로 두고, ${from} 칸만 비워요 (오늘 보충으로 기록)`, 'border-blue-300 bg-blue-50 text-blue-800');
+                if (!same) html += btn('assign', `${to}를 [${A}] 위치로 변경`, `피킹 위치 품목을 바꾸고 ${from} 칸은 비워요 (오늘 보충으로 기록)`, 'border-amber-300 bg-amber-50 text-amber-800');
+                html += btn('swap', '자리 바꾸기', `${from}에는 [${B}], ${to}에는 [${A}]가 들어가요`, 'border-frihet-sand bg-white text-frihet-brown');
+            }
+            document.getElementById('move-choice-buttons').innerHTML = html;
+            document.getElementById('move-choice-modal').classList.remove('hidden');
+        }
+        function closeMoveChoice() { moveCtx = null; document.getElementById('move-choice-modal').classList.add('hidden'); }
+        function chooseMove(mode) {
+            if (!moveCtx) return;
+            const { from, to } = moveCtx;
+            const a = slots[from], b = slots[to];
+            const today = todayISO();
+            const aItem = a.item, aStatus = a.status, bItem = b.item, bStatus = b.status, bNote = b.note;
+            if (mode === 'refill') {
+                slots[to].lastRefill = today;
+                Object.assign(slots[from], emptyContent());
+            } else if (mode === 'assign') {
+                Object.assign(slots[to], { status: aStatus, item: aItem, lastRefill: today, stack: 0, qty: '', unit: '', date: '', work: '', dest: '', shipDate: '' });
+                Object.assign(slots[from], emptyContent());
+            } else if (mode === 'swap') {
+                Object.assign(slots[to], { status: aStatus, item: aItem, note: a.note || '', stack: 0, qty: '', unit: '', date: '', work: '', dest: '', shipDate: '' });
+                Object.assign(slots[from], emptyContent(), { status: bStatus, item: bItem, note: bNote || '', stack: 1 });
+            }
+            closeMoveChoice();
+            markChanged(from, to);
+            renderEverything();
+            const msg = mode === 'refill' ? `[${bItem}] ${to} 보충 완료 · ${from} 비움` : mode === 'assign' ? `${to}를 [${aItem}] 위치로 지정 · ${from} 비움` : `${from} ↔ ${to} 자리 바꾸기 완료`;
+            saveData(false).then(() => showToast(msg));
+        }
+
         function fillMoveTargets(k) {
             const sec = document.getElementById('move-section');
             const sel = document.getElementById('move-target');
-            if (!isAdmin || !hasPallet(slots[k])) { sec.style.display = 'none'; return; }
+            if (!isAdmin || k.startsWith('D-') || !hasPallet(slots[k])) { sec.style.display = 'none'; return; }
             sec.style.display = '';
-            const opt = key => `<option value="${key}">${key} · ${labelOf(slots[key])}</option>`;
+            const opt = key => `<option value="${key}">${key} · ${key.startsWith('D-') ? (isAssigned(slots[key]) ? esc(slots[key].item) + ' (피킹)' : '품목 미지정 (피킹)') : esc(labelOf(slots[key]))}</option>`;
             const keys = Object.keys(defaultSlots).filter(x => x !== k);
-            const empties = keys.filter(x => !hasPallet(slots[x]));
+            const empties = keys.filter(x => !x.startsWith('D-') && !hasPallet(slots[x]));
             const f2 = keys.filter(x => !x.startsWith('D-')), f3 = keys.filter(x => x.startsWith('D-'));
             sel.innerHTML = '<option value="">옮길 칸을 고르세요</option>'
-                + (empties.length ? `<optgroup label="빈 칸 (${empties.length})">${empties.map(opt).join('')}</optgroup>` : '')
+                + (empties.length ? `<optgroup label="2공장 빈 칸 (${empties.length})">${empties.map(opt).join('')}</optgroup>` : '')
                 + `<optgroup label="제 2공장 전체">${f2.map(opt).join('')}</optgroup>`
-                + `<optgroup label="제 3공장 전체">${f3.map(opt).join('')}</optgroup>`;
+                + `<optgroup label="제 3공장 피킹 위치 (보충·교체 선택)">${f3.map(opt).join('')}</optgroup>`;
         }
 
         function moveFromModal() {
@@ -1508,6 +1624,19 @@
         function savePalletDetail(e) {
             e.preventDefault(); if (!isAdmin) { closeModal(); return; } const k = document.getElementById('modal-slot-key').value;
             const st = document.getElementById('modal-status').value;
+            if (k.startsWith('D-')) {   // 3공장 고정 피킹 위치: 품목·카테고리·비고·최근 보충일만
+                const nm = document.getElementById('modal-item-name').value.trim();
+                const none = st === 'empty' || !nm;
+                slots[k] = Object.assign({}, slots[k], {
+                    name: k, zone: defaultSlots[k]?.zone, status: none ? 'empty' : st, item: none ? '' : nm,
+                    note: document.getElementById('modal-note').value, isFixed: document.getElementById('modal-is-fixed').checked,
+                    lastRefill: none ? '' : document.getElementById('modal-refill').value,
+                    stack: 0, qty: '', unit: '', date: '', work: '', dest: '', shipDate: ''
+                });
+                markChanged(k); closeModal(); renderEverything();
+                saveData(false).then(() => showToast(previewMode ? `🧪 [${k}] 테스트 저장 (미리보기)` : `[${k}] 피킹 위치가 저장되었습니다.`));
+                return;
+            }
             slots[k] = { 
                 name: k, 
                 zone: defaultSlots[k]?.zone, 
@@ -1516,9 +1645,7 @@
                 item: st === 'empty' ? '' : document.getElementById('modal-item-name').value, 
                 qty: st === 'empty' ? '' : document.getElementById('modal-qty').value.trim(), 
                 unit: st === 'empty' ? '' : document.getElementById('modal-unit').value.trim(),
-                work: st === 'empty' || !k.startsWith('D-') ? '' : document.getElementById('modal-work').value,
-                dest: st === 'empty' || !k.startsWith('D-') ? '' : document.getElementById('modal-dest').value.trim(),
-                shipDate: st === 'empty' || !k.startsWith('D-') ? '' : document.getElementById('modal-ship').value.trim(),
+                work: '', dest: '', shipDate: '',
                 date: st === 'empty' ? '' : document.getElementById('modal-date').value, 
                 note: st === 'empty' ? '' : document.getElementById('modal-note').value,
                 isFixed: document.getElementById('modal-is-fixed').checked
