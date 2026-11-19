@@ -3,7 +3,8 @@
 프리헷 물류 배치도 서버 (파이썬 기본 라이브러리만 사용, 별도 설치 불필요)
 
 - 사이트에 들어오면 먼저 아이디/비밀번호로 로그인
-- 로그인한 사람은 배치도 조회 + 수정/이동/저장 가능
+- 로그인한 사람은 배치도 조회만 가능
+- 수정/이동/저장은 '수정하기'에서 수정 비밀번호를 한 번 더 넣어야 가능 (창을 닫으면 다시 잠김, 최대 8시간)
 - 로그인하지 않으면 재고 데이터를 받을 수 없음 (서버에서 차단)
 
 실행:
@@ -17,6 +18,8 @@
     FRIHET_DATA_DIR        재고 데이터 저장 폴더 (기본 ./data)
                            → 재배포해도 데이터가 남도록 이 폴더는 영구 저장소(볼륨)에 연결하세요
     FRIHET_SESSION_DAYS    로그인 유지 기간(일, 기본 30)
+    FRIHET_EDIT_PASSWORD   수정·저장 비밀번호. 지정하지 않으면 기본 수정 비밀번호 사용
+    FRIHET_EDIT_HOURS      수정 비밀번호 한 번으로 수정 가능한 최대 시간 (기본 8)
 
 데이터는 data/layout.json 에 저장되고, 저장할 때마다 data/backups/ 에
 이전 버전이 최근 200개까지 남습니다. data 폴더가 비어 있으면
@@ -41,6 +44,12 @@ PASSWORD = os.environ.get("FRIHET_PASSWORD") or os.environ.get("FRIHET_ADMIN_PAS
 PW_SALT = "frihet-layout-v1:"
 DEFAULT_PW_HASH = "420e42134219b0e18fa215397464ac0fb616f241c41e60d2c2aa6f67dac6a249"
 SESSION_DAYS = float(os.environ.get("FRIHET_SESSION_DAYS", "30"))
+EDIT_PASSWORD = os.environ.get("FRIHET_EDIT_PASSWORD") or ""
+# 수정 비밀번호 기본값 (원문이 아닌 PBKDF2 값으로 보관 — 공개 저장소라 대입 공격에 강하게)
+EDIT_PW_SALT = b"frihet-layout-edit-v1"
+EDIT_PW_ROUNDS = 200_000
+DEFAULT_EDIT_HASH = "556b3ab426238d32bd8f7899803af67e2a5c072305d6ae08c11601125cabfd8f"
+EDIT_HOURS = float(os.environ.get("FRIHET_EDIT_HOURS", "8"))
 
 BASE = Path(__file__).resolve().parent
 INDEX = BASE / "index.html"
@@ -80,16 +89,33 @@ def check_credentials(user_id, pw):
     return id_ok and pw_ok
 
 
-def make_token():
-    exp = int(time.time() + SESSION_DAYS * 86400)
-    sig = hmac.new(SECRET, str(exp).encode(), hashlib.sha256).hexdigest()
-    return f"{exp}.{sig}", exp
+def check_edit_password(pw):
+    if EDIT_PASSWORD:
+        return hmac.compare_digest(pw.encode(), EDIT_PASSWORD.encode())
+    h = hashlib.pbkdf2_hmac("sha256", pw.encode(), EDIT_PW_SALT, EDIT_PW_ROUNDS).hex()
+    return hmac.compare_digest(h, DEFAULT_EDIT_HASH)
 
 
-def token_ok(token):
+def make_token(scope="view", seconds=None):
+    """scope: view(조회, 로그인) / edit(수정·저장). 형식 '{scope}.{만료}.{서명}'"""
+    exp = int(time.time() + (seconds if seconds is not None else SESSION_DAYS * 86400))
+    sig = hmac.new(SECRET, f"{scope}.{exp}".encode(), hashlib.sha256).hexdigest()
+    return f"{scope}.{exp}.{sig}", exp
+
+
+def token_ok(token, scope="view"):
     try:
-        exp_s, sig = token.split(".", 1)
-        good = hmac.new(SECRET, exp_s.encode(), hashlib.sha256).hexdigest()
+        parts = token.split(".")
+        if len(parts) == 2:   # 예전 로그인 토큰 '{만료}.{서명}' → 조회로만 인정
+            if scope != "view":
+                return False
+            exp_s, sig = parts
+            good = hmac.new(SECRET, exp_s.encode(), hashlib.sha256).hexdigest()
+        else:
+            sc, exp_s, sig = parts
+            if sc != scope:
+                return False
+            good = hmac.new(SECRET, f"{sc}.{exp_s}".encode(), hashlib.sha256).hexdigest()
         return hmac.compare_digest(sig, good) and int(exp_s) > time.time()
     except Exception:
         return False
@@ -138,6 +164,8 @@ class Handler(BaseHTTPRequestHandler):
             return "layout"
         if path.endswith("/api/login"):
             return "login"
+        if path.endswith("/api/unlock"):
+            return "unlock"
         if "." in path.rsplit("/", 1)[-1] and not path.endswith("index.html"):
             return None  # favicon.ico 등 다른 파일 요청
         return "index"
@@ -160,6 +188,9 @@ class Handler(BaseHTTPRequestHandler):
     def logged_in(self):
         return token_ok(self.headers.get("X-Session-Token", ""))
 
+    def can_edit(self):
+        return token_ok(self.headers.get("X-Edit-Token", ""), "edit")
+
     def do_GET(self):
         r = self.route()
         if r == "index":
@@ -178,7 +209,20 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(404, {"error": "not found"})
 
     def do_POST(self):
-        if self.route() != "login":
+        r = self.route()
+        if r == "unlock":   # 수정 비밀번호 확인 → 수정 토큰
+            if not self.logged_in():
+                return self.send_json(401, {"error": "login required"})
+            try:
+                pw = str(self.read_json().get("password", ""))
+            except Exception:
+                return self.send_json(400, {"error": "bad request"})
+            if not check_edit_password(pw):
+                time.sleep(1)
+                return self.send_json(403, {"error": "wrong edit password"})
+            token, exp = make_token("edit", EDIT_HOURS * 3600)
+            return self.send_json(200, {"editToken": token, "expiresAt": exp})
+        if r != "login":
             return self.send_json(404, {"error": "not found"})
         try:
             body = self.read_json()
@@ -196,6 +240,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(404, {"error": "not found"})
         if not self.logged_in():
             return self.send_json(401, {"error": "login required"})
+        if not self.can_edit():
+            return self.send_json(403, {"error": "edit locked"})
         try:
             payload = self.read_json()
         except Exception:
@@ -235,5 +281,7 @@ if __name__ == "__main__":
         sys.exit(f"{INDEX} 파일이 없습니다. server.py 와 같은 폴더에 index.html 을 두세요.")
     if not PASSWORD:
         print("FRIHET_PASSWORD 가 없어 기본 비밀번호를 사용합니다.")
+    if not EDIT_PASSWORD:
+        print("FRIHET_EDIT_PASSWORD 가 없어 기본 수정 비밀번호를 사용합니다.")
     print(f"프리헷 배치도 서버 실행 중: http://{HOST}:{PORT}/  (아이디: {LOGIN_ID})")
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

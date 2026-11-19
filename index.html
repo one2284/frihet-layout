@@ -211,6 +211,12 @@
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-frihet-sand text-xs"></i>
                     <input type="text" id="search-input" oninput="handleSearch()" placeholder="품목명, 상태, 슬롯 검색..." class="w-full bg-white/10 text-xs text-white placeholder-frihet-sand/70 pl-8 pr-3 py-2 rounded-lg border border-frihet-sand/40 focus:outline-none focus:bg-white/20 focus:border-frihet-ivory">
                 </div>
+                <button onclick="openUnlock()" title="수정 비밀번호를 넣으면 수정·저장할 수 있어요" class="viewer-only px-3 py-2 text-xs font-bold text-white bg-frihet-amber hover:bg-amber-600 rounded-lg transition-all shadow flex items-center gap-1">
+                    <i class="fa-solid fa-lock"></i> 수정하기
+                </button>
+                <button onclick="lockEdit()" title="다시 조회 전용으로 잠그기" class="admin-only px-3 py-2 text-xs font-bold text-frihet-ivory bg-white/10 hover:bg-white/20 border border-frihet-sand/40 rounded-lg transition-all shadow flex items-center gap-1">
+                    <i class="fa-solid fa-lock-open"></i> 수정 잠금
+                </button>
                 <button onclick="confirmReset()" class="admin-only px-3 py-2 text-xs font-bold text-frihet-brown bg-frihet-ivory hover:bg-white rounded-lg transition-all shadow flex items-center gap-1">
                     <i class="fa-solid fa-rotate-right"></i> 초기화
                 </button>
@@ -223,7 +229,7 @@
                 <button onclick="downloadBackup()" title="지금 재고를 layout.json 파일로 내려받기 (재배포 전 백업용)" class="admin-only px-3 py-2 text-xs font-bold text-frihet-ivory bg-white/10 hover:bg-white/20 border border-frihet-sand/40 rounded-lg transition-all shadow flex items-center gap-1 ml-2">
                     <i class="fa-solid fa-file-arrow-down"></i> 백업
                 </button>
-                <button onclick="handleLogout()" class="admin-only px-3.5 py-2 text-xs font-bold text-red-400 bg-white/10 hover:bg-red-500 hover:text-white border border-red-400/30 hover:border-red-500 rounded-lg transition-all shadow flex items-center gap-1 ml-2">
+                <button onclick="handleLogout()" class="px-3.5 py-2 text-xs font-bold text-red-400 bg-white/10 hover:bg-red-500 hover:text-white border border-red-400/30 hover:border-red-500 rounded-lg transition-all shadow flex items-center gap-1 ml-2">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> 로그아웃
                 </button>
             </div>
@@ -550,13 +556,14 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                     <div class="col-span-2"><label class="block text-[11px] font-bold text-frihet-brown mb-1">품목명 *</label><input type="text" id="inc-item" required class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">카테고리</label>
-                        <select id="inc-status" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none">
+                        <select id="inc-status" onchange="toggleIncExpiry()" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none">
                             <option value="powder">파우더류</option><option value="dessert">디저트류</option><option value="liquid">액상/시럽</option><option value="sub">부자재</option><option value="etc">기타</option>
                         </select></div>
                     <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">수량</label><input type="text" id="inc-qty" inputmode="decimal" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">단위</label><input type="text" id="inc-unit" list="unit-options" value="박스" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">적재 단수</label>
                         <select id="inc-stack" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"><option value="1">1단</option><option value="2" selected>2단</option></select></div>
+                    <div id="inc-expiry-wrap" class="hidden"><label class="block text-[11px] font-bold text-frihet-brick mb-1">소비기한</label><input type="date" id="inc-expiry" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">입고 예정일</label><input type="date" id="inc-date" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-[11px] font-bold text-frihet-brown mb-1">예정 위치</label><select id="inc-slot" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></select></div>
                     <div class="col-span-2 md:col-span-3 lg:col-span-6"><label class="block text-[11px] font-bold text-frihet-brown mb-1">비고 (거래처, 발주번호 등)</label><input type="text" id="inc-note" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
@@ -652,7 +659,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-frihet-brown mb-1">카테고리</label>
-                    <select id="modal-status" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none">
+                    <select id="modal-status" onchange="toggleExpiry()" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none">
                         <option value="empty">공파렛트 (Empty)</option>
                         <option value="powder">파우더류</option>
                         <option value="dessert">디저트류</option>
@@ -666,6 +673,10 @@
                     <div><label class="block text-xs font-bold text-frihet-brown mb-1">수량</label><input type="text" id="modal-qty" inputmode="decimal" placeholder="예: 36" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-xs font-bold text-frihet-brown mb-1">단위</label><input type="text" id="modal-unit" list="unit-options" placeholder="박스" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
                     <div><label class="block text-xs font-bold text-frihet-brown mb-1">입고일</label><input type="text" id="modal-date" placeholder="예: 10.21" class="w-full text-xs p-2.5 bg-white border border-frihet-sand rounded-lg outline-none"></div>
+                </div>
+                <div id="modal-expiry-section" class="hidden">
+                    <label class="block text-xs font-bold text-frihet-brown mb-1"><i class="fa-regular fa-hourglass-half mr-1 text-frihet-brick"></i>소비기한 (디저트류)</label>
+                    <input type="date" id="modal-expiry" class="w-full text-xs p-2 bg-white border border-frihet-sand rounded-lg outline-none">
                 </div>
                 <div id="modal-refill-section" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3">
                     <p class="text-[11px] font-black text-blue-700 mb-2"><i class="fa-solid fa-boxes-packing mr-1"></i>3공장 고정 피킹 위치</p>
@@ -690,10 +701,31 @@
                     <button type="button" onclick="moveFromModal()" class="shrink-0 px-4 py-2 text-xs font-bold text-white bg-frihet-amber hover:bg-frihet-brick rounded-lg transition-colors">이동</button>
                 </div>
                 <p class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">빈 칸이면 그대로 옮기고, 파렛트가 있는 칸이면 서로 자리를 바꿔요. 위에서 고친 내용이 있으면 먼저 [저장]한 뒤 이동하세요.<br>배치도에서 파렛트를 끌어다 다른 칸에 놓아도 옮겨져요.</p>
+                <div class="mt-4 pt-4 border-t border-dashed border-frihet-sand">
+                    <label class="block text-xs font-bold text-frihet-brown mb-1.5"><i class="fa-solid fa-right-from-bracket mr-1 text-red-500"></i>파렛트 내보내기</label>
+                    <button type="button" onclick="exportPallet()" class="w-full px-4 py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors">이 파렛트 내보내기 (칸 비우기)</button>
+                    <p class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">출고·반출 등으로 파렛트가 센터를 떠날 때 눌러요. 이 칸은 빈 칸이 되고, 자물쇠(고정석) 표시는 그대로 남아요.</p>
+                </div>
             </div>
         </div>
     </div>
     
+    <div id="unlock-modal" class="fixed inset-0 bg-frihet-brown/60 backdrop-blur-sm z-[70] flex items-center justify-center hidden no-print p-4">
+        <form onsubmit="submitUnlock(event)" class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-frihet-sand text-frihet-darkText">
+            <div class="flex items-center justify-between border-b border-frihet-sand pb-3 mb-4">
+                <h3 class="text-base font-bold text-frihet-brown"><i class="fa-solid fa-lock mr-1.5 text-frihet-amber"></i>수정 비밀번호</h3>
+                <button type="button" onclick="closeUnlock()" class="text-gray-400 hover:text-frihet-brown text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3 leading-relaxed">수정·이동·저장을 하려면 수정 비밀번호를 넣어 주세요.<br>이 창(탭)을 닫거나 [수정 잠금]을 누르면 다시 잠겨요.</p>
+            <input type="password" id="unlock-pw" autocomplete="off" class="w-full border border-frihet-sand rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-frihet-amber" placeholder="수정 비밀번호">
+            <p id="unlock-error" class="hidden text-xs text-red-500 font-bold mt-2"></p>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closeUnlock()" class="px-4 py-2 text-xs font-bold text-gray-500 bg-frihet-bg rounded-lg">취소</button>
+                <button type="submit" id="unlock-btn" class="px-4 py-2 text-xs font-bold text-white bg-frihet-brown rounded-lg">확인</button>
+            </div>
+        </form>
+    </div>
+
     <div id="toast" class="fixed bottom-6 right-6 bg-frihet-brown text-frihet-ivory px-4 py-3 rounded-xl font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 flex items-center gap-2 z-50">
         <i class="fa-solid fa-circle-check text-frihet-amber"></i><span id="toast-msg">저장되었습니다.</span>
     </div>
@@ -758,11 +790,16 @@
         basePath = basePath.replace(/[^/]*$/, '');
         const API_LAYOUT = basePath + 'api/layout';
         const API_LOGIN = basePath + 'api/login';
+        const API_UNLOCK = basePath + 'api/unlock';
+        const EDIT_KEY = 'frihet_edit_v1';   // 수정 토큰: 창(탭)을 닫으면 사라지는 sessionStorage에 보관
         const POLL_MS = 30000;               // 다른 사람이 고친 내용 자동 반영 주기 (30초)
         const TOKEN_KEY = 'frihet_session_v1';
 
-        let isAdmin = false;                 // 로그인 상태 = 수정 가능
+        let isAdmin = false;                 // 수정 비밀번호까지 확인된 상태 = 수정 가능 (로그인만 하면 조회 전용)
         let token = '';
+        let editToken = '';
+        let editExp = 0;
+        let retryAfterUnlock = false;        // 저장하다 수정 잠금에 걸리면, 비밀번호 확인 뒤 다시 저장
         let serverVersion = -1;
         let lastUpdatedAt = null;
         let dirty = false;                   // 작성표에서 고친 뒤 아직 저장 안 한 상태
@@ -772,6 +809,10 @@
 
         window.handleLogin = handleLogin;
         window.handleLogout = handleLogout;
+        window.openUnlock = openUnlock;
+        window.closeUnlock = closeUnlock;
+        window.submitUnlock = submitUnlock;
+        window.lockEdit = lockEdit;
         window.downloadBackup = downloadBackup;
         window.switchViewMode = switchViewMode;
         window.confirmReset = confirmReset;
@@ -797,6 +838,24 @@
         window.confirmReceive = confirmReceive;
 
         function clone(o) { return JSON.parse(JSON.stringify(o)); }
+        // 소비기한 표시: 지남 → 빨강, 30일 이내 → 주황
+        function expiryInfo(iso) {
+            if (!iso) return null;
+            const days = Math.round((new Date(iso + 'T00:00:00') - new Date(todayISO() + 'T00:00:00')) / 86400000);
+            const cls = days < 0 ? 'text-red-600 font-black' : days <= 30 ? 'text-orange-600 font-bold' : 'text-gray-500';
+            const tail = days < 0 ? ' (지남)' : days <= 30 ? ` (D-${days})` : '';
+            return { cls, text: `기한 ${mdFromISO(iso)}${tail}` };
+        }
+        function toggleExpiry() {
+            const k = document.getElementById('modal-slot-key').value || '';
+            const on = document.getElementById('modal-status').value === 'dessert' && !k.startsWith('D-');
+            document.getElementById('modal-expiry-section').classList.toggle('hidden', !on);
+        }
+        function toggleIncExpiry() {
+            document.getElementById('inc-expiry-wrap').classList.toggle('hidden', document.getElementById('inc-status').value !== 'dessert');
+        }
+        window.toggleExpiry = toggleExpiry;
+        window.toggleIncExpiry = toggleIncExpiry;
         function markChanged(...keys) { keys.forEach(k => changedKeys.add(k)); }
 
         // 화면에 글자를 넣을 때 특수문자 처리 (여러 명이 입력하므로 안전하게)
@@ -867,10 +926,67 @@
         function readToken() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return token; } }
         function writeToken(t) { token = t; try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
 
+        function readEditToken() {
+            try {
+                const o = JSON.parse(sessionStorage.getItem(EDIT_KEY) || 'null');
+                if (o && o.t && o.exp * 1000 > Date.now()) { editToken = o.t; editExp = o.exp; return; }
+            } catch (e) {}
+            editToken = ''; editExp = 0;
+        }
+        function writeEditToken(t, exp) {
+            editToken = t || ''; editExp = exp || 0;
+            try { t ? sessionStorage.setItem(EDIT_KEY, JSON.stringify({ t: t, exp: exp })) : sessionStorage.removeItem(EDIT_KEY); } catch (e) {}
+        }
+        function editValid() { return previewMode || (!!editToken && editExp * 1000 > Date.now()); }
+
         function enterApp() {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('dashboard-content').style.display = '';
-            setAdmin(true);
+            readEditToken();
+            setAdmin(editValid());
+        }
+
+        function openUnlock() {
+            if (previewMode) { setAdmin(true); showToast('🧪 미리보기라 비밀번호 없이 수정 모드로 바꿨어요'); return; }
+            document.getElementById('unlock-error').classList.add('hidden');
+            document.getElementById('unlock-pw').value = '';
+            document.getElementById('unlock-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('unlock-pw').focus(), 50);
+        }
+        function closeUnlock() {
+            retryAfterUnlock = false;
+            document.getElementById('unlock-modal').classList.add('hidden');
+        }
+        async function submitUnlock(e) {
+            e.preventDefault();
+            const err = document.getElementById('unlock-error');
+            const btn = document.getElementById('unlock-btn');
+            btn.disabled = true; btn.innerText = '확인 중...';
+            try {
+                const r = await fetch(API_UNLOCK, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Session-Token': token }, body: JSON.stringify({ password: document.getElementById('unlock-pw').value }) });
+                if (r.status === 401) { document.getElementById('unlock-modal').classList.add('hidden'); writeToken(''); showLogin('로그인이 만료됐어요. 다시 로그인해 주세요.'); return; }
+                if (r.status === 403) { err.innerText = '수정 비밀번호가 맞지 않아요.'; err.classList.remove('hidden'); document.getElementById('unlock-pw').select(); return; }
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const data = await r.json();
+                writeEditToken(data.editToken, data.expiresAt);
+                const retry = retryAfterUnlock;
+                closeUnlock();
+                setAdmin(true);
+                if (retry) await saveData(true); else showToast('수정 모드가 켜졌어요 · 다 고치면 [수정 잠금]을 눌러 주세요');
+            } catch (ex) {
+                err.innerText = '서버에 연결할 수 없어요.'; err.classList.remove('hidden');
+            } finally {
+                btn.disabled = false; btn.innerText = '확인';
+            }
+        }
+        function lockEdit() {
+            if ((dirty || changedKeys.size || changedIncoming.size) && !window.confirm('저장하지 않은 변경 사항이 있습니다. 저장하지 않고 잠글까요?')) return;
+            dirty = false; changedKeys.clear(); changedIncoming.clear();
+            writeEditToken('');
+            setAdmin(false);
+            serverVersion = -1;
+            loadFromServer(true);   // 저장 안 한 변경은 버리고 서버 내용으로 다시 표시
+            showToast('수정을 잠갔어요 · 지금은 조회만 할 수 있어요');
         }
 
         function showLogin(message) {
@@ -914,7 +1030,7 @@
             else showLogin();
             setInterval(() => {
                 const modalOpen = !document.getElementById('pallet-modal').classList.contains('hidden');
-                if (!isAdmin || dirty || dragKey || modalOpen || changedKeys.size || changedIncoming.size || !document.getElementById('receive-modal').classList.contains('hidden') || !document.getElementById('move-choice-modal').classList.contains('hidden') || document.getElementById('inc-id').value) return;   // 편집 중엔 덮어쓰지 않음
+                if (dirty || dragKey || modalOpen || changedKeys.size || changedIncoming.size || !document.getElementById('receive-modal').classList.contains('hidden') || !document.getElementById('move-choice-modal').classList.contains('hidden') || document.getElementById('inc-id').value) return;   // 편집 중엔 덮어쓰지 않음
                 loadFromServer(true);
             }, POLL_MS);
             window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -966,6 +1082,7 @@
             changedKeys.clear();
             changedIncoming.clear();
             writeToken('');
+            writeEditToken('');
             serverVersion = -1;
             previewMode = false;
             showLogin();
@@ -997,10 +1114,19 @@
             try {
                 const r = await fetch(API_LAYOUT, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
+                    headers: { 'Content-Type': 'application/json', 'X-Session-Token': token, 'X-Edit-Token': editToken },
                     body: JSON.stringify(body)
                 });
                 if (r.status === 401) { writeToken(''); showLogin('로그인이 만료돼 저장하지 못했어요. 다시 로그인한 뒤 수정해 주세요.'); return; }
+                if (r.status === 403) {   // 수정 시간이 끝남 → 고친 내용은 그대로 두고 비밀번호 확인 뒤 다시 저장
+                    writeEditToken('');
+                    openUnlock();
+                    retryAfterUnlock = true;
+                    const er = document.getElementById('unlock-error');
+                    er.innerText = '수정 시간이 끝났어요. 비밀번호를 넣으면 고친 내용을 이어서 저장해요.';
+                    er.classList.remove('hidden');
+                    return;
+                }
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 const data = await r.json();
                 if (full) changedKeys.clear(); else sending.forEach(k => changedKeys.delete(k));
@@ -1066,7 +1192,11 @@
                 const plan = !hasPallet(item) ? Object.values(incoming).filter(x => x.slot === key).sort((a, b) => (a.date || '').localeCompare(b.date || ''))[0] : null;
                 let infoLine = '';
                 if (hasItem && is3F && (item.dest || item.shipDate)) infoLine = `<i class="fa-solid fa-truck-fast mr-0.5"></i>${esc(item.dest || '')}${item.dest && item.shipDate ? ' · ' : ''}${item.shipDate ? esc(item.shipDate) + ' 출고' : ''}`;
-                else if (hasItem && item.date) infoLine = `<i class="fa-regular fa-calendar mr-0.5"></i>입고 ${esc(item.date)}`;
+                else if (hasItem && (item.date || item.expiry)) {
+                    const ex = item.status === 'dessert' ? expiryInfo(item.expiry) : null;
+                    infoLine = (item.date ? `<i class="fa-regular fa-calendar mr-0.5"></i>입고 ${esc(item.date)}` : '')
+                        + (ex ? `${item.date ? ' · ' : ''}<span class="${ex.cls}">${esc(ex.text)}</span>` : '');
+                }
                 const fixedBadge = item.isFixed ? `<div class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md z-30" title="고정석"><i class="fa-solid fa-lock text-[10px]"></i></div>` : '';
 
                 const tile = document.createElement('div');
@@ -1306,6 +1436,7 @@
             document.getElementById('modal-stack-section').classList.toggle('hidden', pick3);
             document.getElementById('modal-qty-section').classList.toggle('hidden', pick3);
             document.getElementById('modal-refill').value = item.lastRefill || '';
+            document.getElementById('modal-expiry').value = item.expiry || '';
             document.querySelector('#modal-status option[value="empty"]').innerText = pick3 ? '품목 미지정' : '공파렛트 (Empty)';
             document.getElementById('modal-is-fixed').checked = item.isFixed === true;
             
@@ -1322,6 +1453,7 @@
             form.querySelectorAll('input:not([type=hidden]), select, textarea, #stack-btn-group button').forEach(el => { el.disabled = !isAdmin; });
             document.getElementById('modal-title').innerText = k.startsWith('D-') ? (isAdmin ? '피킹 위치 수정' : '피킹 위치 정보') : (isAdmin ? '파렛트 정보 수정' : '파렛트 정보');
             fillMoveTargets(k);
+            toggleExpiry();
             document.getElementById('pallet-modal').classList.remove('hidden');
         }
 
@@ -1371,7 +1503,7 @@
                 const slotOk = x.slot && !hasPallet(slots[x.slot]);
                 return `<tr class="${isToday ? 'bg-amber-50' : ''}">
                     <td class="p-2.5 font-bold ${late ? 'text-red-500' : 'text-frihet-brown'}">${x.date ? esc(mdFromISO(x.date)) : '-'}${isToday ? ' <span class="text-[10px] bg-frihet-amber text-white px-1 rounded">오늘</span>' : ''}${late ? ' <span class="text-[10px] text-red-500">(지남)</span>' : ''}</td>
-                    <td class="p-2.5 font-bold text-frihet-darkText">${esc(x.item)}</td>
+                    <td class="p-2.5 font-bold text-frihet-darkText">${esc(x.item)}${(() => { const ex = x.status === 'dessert' ? expiryInfo(x.expiry) : null; return ex ? `<span class="block text-[10px] ${ex.cls}">${esc(ex.text)}</span>` : ''; })()}</td>
                     <td class="p-2.5 text-gray-600">${CAT_LABEL[x.status] || '-'}</td>
                     <td class="p-2.5 text-frihet-brick font-bold">${esc(fmtQty(x)) || '-'}</td>
                     <td class="p-2.5">${x.stack ? x.stack + '단' : '-'}</td>
@@ -1393,6 +1525,7 @@
             document.getElementById('incoming-form-title').innerHTML = '<i class="fa-solid fa-plus mr-1"></i>입고 예정 추가';
             document.getElementById('inc-submit').innerHTML = '<i class="fa-solid fa-plus mr-1"></i>추가';
             document.getElementById('inc-cancel').classList.add('hidden');
+            toggleIncExpiry();
             renderIncoming();
         }
 
@@ -1410,6 +1543,7 @@
                 unit: document.getElementById('inc-unit').value.trim(),
                 stack: stack,
                 date: document.getElementById('inc-date').value,
+                expiry: document.getElementById('inc-status').value === 'dessert' ? document.getElementById('inc-expiry').value : '',
                 slot: slot,
                 note: document.getElementById('inc-note').value.trim(),
                 createdAt: (incoming[id] && incoming[id].createdAt) || Date.now()
@@ -1430,6 +1564,8 @@
             document.getElementById('inc-unit').value = x.unit || '';
             document.getElementById('inc-stack').value = String(x.stack || 1);
             document.getElementById('inc-date').value = x.date || '';
+            document.getElementById('inc-expiry').value = x.expiry || '';
+            toggleIncExpiry();
             document.getElementById('inc-slot').innerHTML = emptySlotOptions(x.slot, '미정 (입고할 때 고르기)');
             if (x.slot && !document.querySelector(`#inc-slot option[value="${x.slot}"]`)) document.getElementById('inc-slot').insertAdjacentHTML('beforeend', `<option value="${esc(x.slot)}" selected>${esc(x.slot)} (사용 중)</option>`);
             document.getElementById('inc-note').value = x.note || '';
@@ -1451,7 +1587,7 @@
         function openReceive(id) {
             const x = incoming[id]; if (!x || !isAdmin) return;
             document.getElementById('receive-id').value = id;
-            document.getElementById('receive-desc').innerText = `${x.item}${fmtQty(x) ? ' · ' + fmtQty(x) : ''}${x.stack ? ' · ' + x.stack + '단' : ''}`;
+            document.getElementById('receive-desc').innerText = `${x.item}${fmtQty(x) ? ' · ' + fmtQty(x) : ''}${x.stack ? ' · ' + x.stack + '단' : ''}${x.status === 'dessert' && x.expiry ? ' · 소비기한 ' + mdFromISO(x.expiry) : ''}`;
             const prefer = x.slot && !hasPallet(slots[x.slot]) ? x.slot : '';
             document.getElementById('receive-slot').innerHTML = emptySlotOptions(prefer, '칸을 고르세요');
             document.getElementById('receive-date').value = todayMD();
@@ -1471,6 +1607,7 @@
             slots[k] = Object.assign({}, slots[k], {
                 name: k, zone: defaultSlots[k]?.zone, status: x.status || 'etc', stack: stack, item: x.item || '',
                 qty: x.qty || '', unit: x.unit || '', date: document.getElementById('receive-date').value.trim(), note: x.note || '',
+                expiry: x.status === 'dessert' ? (x.expiry || '') : '',
                 work: '', dest: '', shipDate: ''
             });
             delete incoming[id];
@@ -1482,12 +1619,13 @@
         }
 
         // ===== 파렛트 이동 =====
-        const MOVE_FIELDS = ['status', 'stack', 'item', 'qty', 'unit', 'date', 'note', 'work', 'dest', 'shipDate'];
+        const MOVE_FIELDS = ['status', 'stack', 'item', 'qty', 'unit', 'date', 'expiry', 'note', 'work', 'dest', 'shipDate'];
         let dragKey = null;
         window.moveFromModal = moveFromModal;
+        window.exportPallet = exportPallet;
 
         function hasPallet(s) { return !!s && s.status !== 'empty'; }
-        function emptyContent() { return { status: 'empty', stack: 0, item: '', qty: '', unit: '', date: '', note: '', work: '', dest: '', shipDate: '' }; }
+        function emptyContent() { return { status: 'empty', stack: 0, item: '', qty: '', unit: '', date: '', expiry: '', note: '', work: '', dest: '', shipDate: '' }; }
         function pickContent(s) { const o = {}; MOVE_FIELDS.forEach(f => o[f] = s[f] === undefined ? '' : s[f]); return o; }
         function labelOf(s) { return hasPallet(s) ? (s.item || '이름 없는 파렛트') : '빈 칸'; }
 
@@ -1588,6 +1726,19 @@
             if (!movePallet(from, to)) openModal(from);
         }
 
+        function exportPallet() {
+            const k = document.getElementById('modal-slot-key').value;
+            const a = slots[k];
+            if (!isAdmin || !k || k.startsWith('D-') || !hasPallet(a)) return;
+            if (!window.confirm(`[${labelOf(a)}]${fmtQty(a) ? ' ' + fmtQty(a) : ''} 파렛트를 내보낼까요?\n${k} 칸이 빈 칸이 돼요.`)) return;
+            const name = labelOf(a);
+            Object.assign(slots[k], emptyContent());
+            markChanged(k);
+            closeModal();
+            renderEverything();
+            saveData(false).then(() => showToast(`[${name}] 내보내기 완료 · ${k} 비움`));
+        }
+
         function attachDrag(tile, key, movable) {
             if (movable) {
                 tile.draggable = true;
@@ -1648,6 +1799,7 @@
                 work: '', dest: '', shipDate: '',
                 date: st === 'empty' ? '' : document.getElementById('modal-date').value, 
                 note: st === 'empty' ? '' : document.getElementById('modal-note').value,
+                expiry: st === 'dessert' ? document.getElementById('modal-expiry').value : '',
                 isFixed: document.getElementById('modal-is-fixed').checked
             };
             markChanged(k); closeModal(); renderAllSlots(); renderBatchTable(); updateSummary(); saveData(false).then(() => showToast(previewMode ? `🧪 [${k}] 테스트 저장 (미리보기)` : `[${k}] 저장되어 전 부서에 반영되었습니다.`));
